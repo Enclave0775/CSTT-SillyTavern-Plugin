@@ -1,0 +1,58 @@
+.CSTT .cstt-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Reduced gap */
+}
+.CSTT .cstt-block {
+    display: flex;
+    align-items: center;
+}
+.CSTT #file-select-button {
+    flex-shrink: 0; /* Prevent button from shrinking */
+    white-space:nowrap;
+}
+.CSTT .file-input-block {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.CSTT .file-input-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.CSTT #file-name-display {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-color-secondary);
+}
+.CSTT #convert-button {
+    white-space:nowrap;
+    align-self: flex-start;
+}
+.CSTT #status-area {
+    padding: 12px;
+    background-color: var(--background-color-secondary);
+    border: solid;
+    border-color: gray;
+    border-radius: 15px
+}
+.CSTT #status-area h4 {
+    margin: 0 0 8px 0; /* Adjust heading margin */
+    font-weight: bold;
+}
+.CSTT #log-output {
+    max-height: 150px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    background-color: var(--background-color-tertiary);
+    padding: 10px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 0.85em;
+    line-height: 1.4;
+    border: 1px solid var(--border-color);
+}

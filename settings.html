@@ -1,0 +1,51 @@
+<!-- png-chinese-converter/settings.html -->
+<div class="CSTT">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>CSTT 簡繁角色卡轉換</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content cstt-container">
+            <div class="cstt-block file-input-block">
+                <div class="file-input-controls">
+                    <label>選擇檔案:</label>
+                    <input type="file" id="file-input" class="text_pole" multiple accept=".png,.json" style="display: none;">
+                    <button id="file-select-button" class="menu_button">瀏覽...</button>
+                </div>
+                <span id="file-name-display" style="font-style: italic;">未選擇任何檔案</span>
+            </div>
+
+            <div class="cstt-block">
+                <label>轉換模式:</label>
+                <input type="radio" id="s2t" name="conversion-mode" value="s2t" checked>
+                <label for="s2t">簡轉繁</label>
+                <input type="radio" id="t2s" name="conversion-mode" value="t2s">
+                <label for="t2s">繁轉簡</label>
+            </div>
+
+            <div class="cstt-block">
+                <input type="checkbox" id="auto-import-checkbox" checked>
+                <label for="auto-import-checkbox">自動匯入 (若失敗則改為下載)</label>
+            </div>
+
+            <div>
+                <button id="convert-button" class="menu_button">轉換</button>
+            </div>
+    
+            <div id="status-area">
+                <h4>轉換日誌</h4>
+                <pre id="log-output"></pre>
+            </div>
+
+            <hr>
+            <div>
+                <p>對於插件有問題可聯絡提問</p>
+                <p>原作者 (Original Author):</p>
+                <ul>
+                    <li>Discord: enclave_x0775</li>
+                    <li>Telegram: @Enclave_X</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
