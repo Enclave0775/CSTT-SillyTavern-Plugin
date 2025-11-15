@@ -8,7 +8,7 @@
 */
 
 (function () {
-    const extensionName = "CSTT";
+    const extensionName = "CSTT-SillyTavern-Plugin";
     const extensionFolderPath = `scripts/extensions/third-party/${extensionName}/`;
 
     function loadCss(href) {

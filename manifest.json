@@ -5,5 +5,5 @@
     "version": "1.0.0",
     "js": "index.js",
     "css": "style.css",
-    "type": "third-party"
+    "homePage": "https://github.com/Enclave0775/CSTT-SillyTavern-Plugin"
 }
