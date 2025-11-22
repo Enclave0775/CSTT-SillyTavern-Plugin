@@ -45,7 +45,7 @@
 
             await Promise.all([
                 loadCss(`${extensionFolderPath}style.css`),
-                loadScript("https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"),
+                loadScript(`${extensionFolderPath}lib/full.js`),
                 loadScript(`${extensionFolderPath}lib/pako.js`),
                 loadScript(`${extensionFolderPath}lib/crc.js`)
             ]);
@@ -67,10 +67,11 @@
         const logOutput = document.getElementById('log-output');
         const conversionModeRadios = document.querySelectorAll('input[name="conversion-mode"]');
         const autoImportCheckbox = document.getElementById('auto-import-checkbox');
+        const importTypeBlock = document.getElementById('import-type-block');
 
         function log(msg) { if (logOutput) { logOutput.appendChild(document.createTextNode(msg + '\n')); logOutput.scrollTop = logOutput.scrollHeight; } else console.log(msg); }
 
-        if (!fileInput || !convertButton || !fileSelectButton || !fileNameDisplay || conversionModeRadios.length === 0 || !autoImportCheckbox) {
+        if (!fileInput || !convertButton || !fileSelectButton || !fileNameDisplay || conversionModeRadios.length === 0 || !autoImportCheckbox || !importTypeBlock) {
             console.error(`${extensionName}: UI elements missing`);
             if (logOutput) logOutput.textContent = '錯誤：UI 元素缺失，擴充功能無法初始化。';
             return;
@@ -90,10 +91,17 @@
             }
         });
 
+        autoImportCheckbox.addEventListener('change', () => {
+            importTypeBlock.style.display = autoImportCheckbox.checked ? 'block' : 'none';
+        });
+        // Initial state
+        importTypeBlock.style.display = autoImportCheckbox.checked ? 'block' : 'none';
+
         convertButton.addEventListener('click', async () => {
             if (logOutput) logOutput.textContent = ''; // Clear log on new conversion
             const files = fileInput.files;
             const mode = document.querySelector('input[name="conversion-mode"]:checked').value;
+            const importType = document.querySelector('input[name="import-type"]:checked').value;
             if (!files || files.length === 0) { log('請先選擇要轉換的檔案。'); return; }
             log('INFO: 開始轉換...');
 
@@ -130,7 +138,7 @@
             }
 
             if (convertedFiles.length > 0) {
-                await importFile(convertedFiles, log);
+                await importFile(convertedFiles, importType, log);
             }
             if (downloadTasks.length > 0) {
                 await Promise.all(downloadTasks);
@@ -158,21 +166,56 @@
             return value;
         }
 
-        async function importFile(files, log) {
+        async function importFile(files, importType, log) {
             try {
                 const dataTransfer = new DataTransfer();
                 files.forEach(file => dataTransfer.items.add(file));
 
-                const dropEvent = new DragEvent('drop', {
-                    bubbles: true,
-                    cancelable: true,
-                    dataTransfer: dataTransfer,
-                });
-
-                document.body.dispatchEvent(dropEvent);
-                log(`✓ 已提交 ${files.length} 個檔案進行模擬拖放匯入。`);
+                if (importType === 'world') {
+                    const worldImportInput = document.getElementById('world_import_file');
+                    if (worldImportInput) {
+                        worldImportInput.files = dataTransfer.files;
+                        const changeEvent = new Event('change', { bubbles: true });
+                        worldImportInput.dispatchEvent(changeEvent);
+                        log(`✓ 已提交 ${files.length} 個檔案至世界書匯入處理程序。`);
+                    } else {
+                        throw new Error('找不到世界書匯入的檔案輸入框 (world_import_file)。');
+                    }
+                } else if (importType === 'preset') {
+                    if (window.TavernHelper && typeof window.TavernHelper.importRawPreset === 'function') {
+                        log('INFO: 正在使用 TavernHelper 匯入預設...');
+                        for (const file of files) {
+                            try {
+                                const fileContent = await file.text();
+                                await window.TavernHelper.importRawPreset(file.name, fileContent);
+                                log(`✓ 已提交預設檔案: ${file.name}`);
+                            } catch (err) {
+                                log(`❌ 匯入預設檔案 ${file.name} 時發生錯誤: ${err.message}`);
+                                console.error(err);
+                            }
+                        }
+                        if (window.TavernHelper && typeof window.TavernHelper.addOneMessage === 'function') {
+                            window.TavernHelper.addOneMessage({
+                                is_user: false,
+                                name: "CSTT",
+                                mes: `已成功提交 ${files.length} 個預設檔案進行匯入。`,
+                            });
+                        }
+                    } else {
+                        throw new Error('找不到 TavernHelper.importRawPreset 或 TavernHelper.addOneMessage 功能。請確認 JS-Slash-Runner 擴充功能已正確安裝及啟用。');
+                    }
+                } else {
+                    // Default to character import via drag-and-drop on body
+                    const dropEvent = new DragEvent('drop', {
+                        bubbles: true,
+                        cancelable: true,
+                        dataTransfer: dataTransfer,
+                    });
+                    document.body.dispatchEvent(dropEvent);
+                    log(`✓ 已提交 ${files.length} 個檔案進行角色卡拖放匯入。`);
+                }
             } catch (e) {
-                log(`❌ 模擬拖放匯入時發生錯誤: ${e.message}`);
+                log(`❌ 模擬匯入時發生錯誤: ${e.message}`);
                 console.error(e);
                 const downloadTasks = files.map(file => downloadFile(file, file.name, log));
                 await Promise.all(downloadTasks);
