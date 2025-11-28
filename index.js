@@ -204,6 +204,106 @@
                     } else {
                         throw new Error('找不到 TavernHelper.importRawPreset 或 TavernHelper.addOneMessage 功能。請確認 JS-Slash-Runner 擴充功能已正確安裝及啟用。');
                     }
+                } else if (importType === 'regex') {
+                    // Attempt to find API functions (global or on TavernHelper)
+                    const th = window.TavernHelper || {};
+                    const updateRegexFunc = window.updateTavernRegexesWith || th.updateTavernRegexesWith;
+                    const getRegexFunc = window.getTavernRegexes || th.getTavernRegexes;
+                    const replaceRegexFunc = window.replaceTavernRegexes || th.replaceTavernRegexes;
+                    const uuidFunc = window.uuidv4 || th.uuidv4 || (() => crypto.randomUUID());
+
+                    // Helper to map ST Regex format to TavernHelper Regex format
+                    const mapToTavernRegex = (item) => {
+                        // Default scope mapping (ST placement -> TavernHelper source)
+                        // 1: User Input, 2: AI Output, 3: World Info, 4: Slash Command
+                        const placement = Array.isArray(item.placement) ? item.placement : [];
+                        const source = item.source || {
+                            user_input: placement.includes(1),
+                            ai_output: placement.includes(2),
+                            world_info: placement.includes(3),
+                            slash_command: placement.includes(4),
+                        };
+                        // Default to AI Output if nothing specified
+                        if (!item.source && placement.length === 0) {
+                            source.ai_output = true;
+                        }
+
+                        const destination = item.destination || {
+                            display: !item.promptOnly,
+                            prompt: !item.markdownOnly, // Assuming markdownOnly implies display only
+                        };
+
+                        return {
+                            id: item.id || uuidFunc(),
+                            script_name: item.scriptName || item.script_name || "Imported Regex",
+                            find_regex: item.findRegex || item.find_regex || "",
+                            replace_string: item.replaceString || item.replace_string || "",
+                            enabled: item.disabled !== undefined ? !item.disabled : (item.enabled !== undefined ? item.enabled : true),
+                            run_on_edit: item.runOnEdit !== undefined ? item.runOnEdit : (item.run_on_edit || false),
+                            min_depth: item.minDepth || item.min_depth || null,
+                            max_depth: item.maxDepth || item.max_depth || null,
+                            scope: item.scope || 'global', // Default to global scope
+                            source: source,
+                            destination: destination
+                        };
+                    };
+
+                    // Helper to perform update if update function is missing but get/replace exist
+                    const performUpdate = async (newRegexes) => {
+                        if (typeof updateRegexFunc === 'function') {
+                            return await updateRegexFunc((existing) => [...existing, ...newRegexes]);
+                        } else if (typeof getRegexFunc === 'function' && typeof replaceRegexFunc === 'function') {
+                            const existing = getRegexFunc();
+                            const merged = [...existing, ...newRegexes];
+                            await replaceRegexFunc(merged);
+                            return merged;
+                        }
+                        throw new Error("找不到支援的正規表達式 API (updateTavernRegexesWith 或 get/replaceTavernRegexes)");
+                    };
+
+                    if (updateRegexFunc || (getRegexFunc && replaceRegexFunc)) {
+                        log('INFO: 正在使用 TavernHelper API 匯入正規表達式...');
+                        try {
+                            const newRegexes = [];
+                            for (const file of files) {
+                                const content = await file.text();
+                                let json;
+                                try { json = JSON.parse(content); } catch (e) { 
+                                    log(`❌ 檔案 ${file.name} 解析失敗: 无效的 JSON`);
+                                    continue; 
+                                }
+                                
+                                // Handle both array and ST Regex export format
+                                const items = Array.isArray(json) ? json : (json.regexScripts || [json]);
+                                // Map items to valid TavernRegex structure
+                                const mappedItems = items.map(mapToTavernRegex);
+                                newRegexes.push(...mappedItems);
+                            }
+
+                            if (newRegexes.length > 0) {
+                                await performUpdate(newRegexes);
+                                log(`✓ 已透過 API 成功匯入 ${newRegexes.length} 條正規表達式規則。`);
+                                
+                                const addMsgFunc = window.addOneMessage || th.addOneMessage;
+                                if (typeof addMsgFunc === 'function') {
+                                    addMsgFunc({
+                                        is_user: false,
+                                        name: "CSTT",
+                                        mes: `已成功透過 API 匯入 ${newRegexes.length} 條正規表達式規則。`,
+                                    });
+                                }
+                            } else {
+                                log('⚠️ 未找到可匯入的正規表達式資料。');
+                            }
+                        } catch (e) {
+                            console.error("Regex API import failed", e);
+                            log(`❌ API 匯入失敗: ${e.message}`);
+                        }
+                    } else {
+                        log('❌ 錯誤: 找不到酒館助手 (JS-Slash-Runner) 正規表達式 API。');
+                        console.log("Available TavernHelper keys:", Object.keys(th));
+                        console.error('Regex APIs not found on window or TavernHelper.');
+                    }
                 } else {
                     // Default to character import via drag-and-drop on body
                     const dropEvent = new DragEvent('drop', {

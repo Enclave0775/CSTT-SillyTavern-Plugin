@@ -1,6 +1,6 @@
 # CSTT-SillyTavern-Plugin - SillyTavern 專用繁簡轉換工具
 
-CSTT-SillyTavern-Plugin 是一個為 SillyTavern 設計的第三方擴充功能，主要功能是讓使用者能夠轉換角色卡（`.png`）、世界書（`.json`）、預設（`.json`）與聊天記錄（`.json`）檔案中的簡體中文與繁體中文。
+CSTT-SillyTavern-Plugin 是一個為 SillyTavern 設計的第三方擴充功能，主要功能是讓使用者能夠轉換角色卡（`.png`）、世界書（`.json`）、預設（`.json`）檔案中的簡體中文與繁體中文。
 
 本工具能穩定地處理儲存在 PNG 檔案中的元數據（metadata），確保在轉換文字的同時不會損壞圖片檔案。
 
@@ -11,10 +11,10 @@ CSTT-SillyTavern-Plugin 是一個為 SillyTavern 設計的第三方擴充功能�
     - **角色卡 (PNG):** 智慧型解析 PNG 區塊（`tEXt`, `zTXt`, `iTXt`），這些區塊通常儲存著角色資料。自動偵測並處理元數據中的原始 JSON 或 Base64 編碼的 JSON。在修改後，會以正確的區塊長度和 CRC 校驗和重建 PNG 檔案，以防止檔案損毀。
     - **世界書 (JSON):** 支援轉換世界書檔案。
     - **預設 (JSON):** 支援轉換預設檔案。
-    - **聊天記錄 (JSON):** 可直接轉換 `.json` 檔案。
+    - **正規表達式 (JSON):** 支援轉換正規表達式腳本並匯入。
 - **友善的使用者介面：** 在 SillyTavern 的擴充功能面板中提供了一個簡單的介面，方便使用者上傳檔案並選擇轉換模式。
 - **自動匯入：** （可選功能）轉換後的檔案可以透過模擬拖放的方式自動匯入回 SillyTavern，簡化了操作流程。
-    - **注意：** 預設檔案的匯入功能需要 **[酒館助手](https://gitlab.com/novi028/JS-Slash-Runner)** 插件支援。
+    - **注意：** 預設檔案與正規表達式的匯入功能需要 **[酒館助手](https://gitlab.com/novi028/JS-Slash-Runner)** 插件支援。
 
 ## 安裝方式
 
