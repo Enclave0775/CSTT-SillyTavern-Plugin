@@ -2,7 +2,7 @@
     "display_name": "CSTT",
     "author": "Enclave0775",
     "description": "Converts Chinese characters in PNG metadata and JSON files between Simplified and Traditional.",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "js": "index.js",
     "css": "style.css",
     "homePage": "https://github.com/Enclave0775/CSTT-SillyTavern-Plugin"
