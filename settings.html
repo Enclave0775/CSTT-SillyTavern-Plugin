@@ -43,6 +43,25 @@
             <div>
                 <button id="convert-button" class="menu_button">轉換</button>
             </div>
+
+            <hr>
+
+            <div class="cstt-block">
+                <h4>AI 回覆即時轉換</h4>
+                <div class="cstt-block">
+                    <input type="checkbox" id="ai-convert-enable">
+                    <label for="ai-convert-enable">啟用 AI 回覆攔截轉換</label>
+                </div>
+            </div>
+            <div class="cstt-block">
+                <div class="cstt-block" id="ai-convert-mode-block" style="display: none;">
+                    <label>轉換模式:</label>
+                    <input type="radio" id="ai-s2t" name="ai-conversion-mode" value="s2t" checked>
+                    <label for="ai-s2t">簡轉繁</label>
+                    <input type="radio" id="ai-t2s" name="ai-conversion-mode" value="t2s">
+                    <label for="ai-t2s">繁轉簡</label>
+                </div>
+            </div>
     
             <div id="status-area">
                 <h4>轉換日誌</h4>
