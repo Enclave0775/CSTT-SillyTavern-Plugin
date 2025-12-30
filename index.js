@@ -13,6 +13,20 @@ import { extension_settings, getContext } from '/scripts/extensions.js';
 const extensionName = "CSTT-SillyTavern-Plugin";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}/`;
 
+// Mapping for conversion modes
+const MODE_MAP = {
+    's2t': { from: 'cn', to: 't' },
+    't2s': { from: 't', to: 'cn' },
+    's2tw': { from: 'cn', to: 'tw' },
+    'tw2s': { from: 'tw', to: 'cn' },
+    's2twp': { from: 'cn', to: 'twp' },
+    'tw2sp': { from: 'twp', to: 'cn' },
+    's2hk': { from: 'cn', to: 'hk' },
+    'hk2s': { from: 'hk', to: 'cn' },
+    't2tw': { from: 't', to: 'tw' },
+    't2hk': { from: 't', to: 'hk' }
+};
+
 function loadCss(href) {
     if (document.querySelector(`link[href="${href}"]`)) return Promise.resolve();
     return new Promise((resolve, reject) => {
@@ -75,10 +89,9 @@ function initializeAiInterception() {
     // UI Elements
     const enableCheckbox = document.getElementById('ai-convert-enable');
     const modeBlock = document.getElementById('ai-convert-mode-block');
-    const s2tRadio = document.getElementById('ai-s2t');
-    const t2sRadio = document.getElementById('ai-t2s');
+    const modeSelect = document.getElementById('ai-conversion-mode-select');
 
-    if (!enableCheckbox || !modeBlock || !s2tRadio || !t2sRadio) {
+    if (!enableCheckbox || !modeBlock || !modeSelect) {
         console.warn(`${extensionName}: AI Interception UI elements missing.`);
         return;
     }
@@ -87,11 +100,11 @@ function initializeAiInterception() {
     enableCheckbox.checked = settings.aiConvertEnabled || false;
     modeBlock.style.display = enableCheckbox.checked ? 'block' : 'none';
     
-    if (settings.aiConvertMode === 't2s') {
-        t2sRadio.checked = true;
-    } else {
-        s2tRadio.checked = true; // Default s2t
+    // Set default mode if not set or invalid
+    if (!settings.aiConvertMode || !MODE_MAP[settings.aiConvertMode]) {
+        settings.aiConvertMode = 's2twp';
     }
+    modeSelect.value = settings.aiConvertMode;
 
     // Event Listeners for UI
     enableCheckbox.addEventListener('change', () => {
@@ -100,13 +113,10 @@ function initializeAiInterception() {
         saveSettings();
     });
 
-    const updateMode = () => {
-        settings.aiConvertMode = document.querySelector('input[name="ai-conversion-mode"]:checked').value;
+    modeSelect.addEventListener('change', () => {
+        settings.aiConvertMode = modeSelect.value;
         saveSettings();
-    };
-
-    s2tRadio.addEventListener('change', updateMode);
-    t2sRadio.addEventListener('change', updateMode);
+    });
 
     // Register Generation Event Listener
     if (!window._cstt_event_registered) {
@@ -142,8 +152,8 @@ function initializeAiInterception() {
                     return;
                 }
 
-                const mode = settings.aiConvertMode || 's2t';
-                const options = mode === 's2t' ? { from: 'cn', to: 'twp' } : { from: 'twp', to: 'cn' };
+                const mode = settings.aiConvertMode || 's2twp';
+                const options = MODE_MAP[mode] || MODE_MAP['s2twp'];
                 
                 if (typeof OpenCC === 'undefined') {
                     console.warn(`${extensionName}: OpenCC not loaded, skipping conversion.`);
@@ -180,13 +190,13 @@ function initializeConverter() {
     const fileNameDisplay = document.getElementById('file-name-display');
     const convertButton = document.getElementById('convert-button');
     const logOutput = document.getElementById('log-output');
-    const conversionModeRadios = document.querySelectorAll('input[name="conversion-mode"]');
+    const conversionModeSelect = document.getElementById('conversion-mode-select');
     const autoImportCheckbox = document.getElementById('auto-import-checkbox');
     const importTypeBlock = document.getElementById('import-type-block');
 
     function log(msg) { if (logOutput) { logOutput.appendChild(document.createTextNode(msg + '\n')); logOutput.scrollTop = logOutput.scrollHeight; } else console.log(msg); }
 
-    if (!fileInput || !convertButton || !fileSelectButton || !fileNameDisplay || conversionModeRadios.length === 0 || !autoImportCheckbox || !importTypeBlock) {
+    if (!fileInput || !convertButton || !fileSelectButton || !fileNameDisplay || !conversionModeSelect || !autoImportCheckbox || !importTypeBlock) {
         console.error(`${extensionName}: UI elements missing`);
         if (logOutput) logOutput.textContent = '錯誤：UI 元素缺失，擴充功能無法初始化。';
         return;
@@ -215,17 +225,17 @@ function initializeConverter() {
     convertButton.addEventListener('click', async () => {
         if (logOutput) logOutput.textContent = ''; // Clear log on new conversion
         const files = fileInput.files;
-        const mode = document.querySelector('input[name="conversion-mode"]:checked').value;
+        const mode = conversionModeSelect.value;
         const importType = document.querySelector('input[name="import-type"]:checked').value;
         if (!files || files.length === 0) { log('請先選擇要轉換的檔案。'); return; }
-        log('INFO: 開始轉換...');
+        log(`INFO: 開始轉換 (模式: ${mode})...`);
 
         const convertedFiles = [];
         const downloadTasks = [];
 
         for (const file of files) {
             try {
-                const options = mode === 's2t' ? { from: 'cn', to: 'twp' } : { from: 'twp', to: 'cn' };
+                const options = MODE_MAP[mode] || MODE_MAP['s2twp'];
                 const converter = OpenCC.Converter(options);
                 const name = file.name.toLowerCase();
                 let blob;

@@ -16,11 +16,19 @@
             </div>
 
             <div class="cstt-block">
-                <label>轉換模式:</label>
-                <input type="radio" id="s2t" name="conversion-mode" value="s2t" checked>
-                <label for="s2t">簡轉繁</label>
-                <input type="radio" id="t2s" name="conversion-mode" value="t2s">
-                <label for="t2s">繁轉簡</label>
+                <label for="conversion-mode-select">轉換模式:</label>
+                <select id="conversion-mode-select" class="text_pole">
+                    <option value="s2t">簡體 -> 繁體 (標準)</option>
+                    <option value="t2s">繁體 -> 簡體 (標準)</option>
+                    <option value="s2tw">簡體 -> 臺灣正體</option>
+                    <option value="tw2s">臺灣正體 -> 簡體</option>
+                    <option value="s2twp" selected>簡體 -> 臺灣正體 (含慣用語)</option>
+                    <option value="tw2sp">臺灣正體 (含慣用語) -> 簡體</option>
+                    <option value="s2hk">簡體 -> 香港繁體</option>
+                    <option value="hk2s">香港繁體 -> 簡體</option>
+                    <option value="t2tw">繁體 (標準) -> 臺灣正體</option>
+                    <option value="t2hk">繁體 (標準) -> 香港繁體</option>
+                </select>
             </div>
 
             <div class="cstt-block">
@@ -55,11 +63,19 @@
             </div>
             <div class="cstt-block">
                 <div class="cstt-block" id="ai-convert-mode-block" style="display: none;">
-                    <label>轉換模式:</label>
-                    <input type="radio" id="ai-s2t" name="ai-conversion-mode" value="s2t" checked>
-                    <label for="ai-s2t">簡轉繁</label>
-                    <input type="radio" id="ai-t2s" name="ai-conversion-mode" value="t2s">
-                    <label for="ai-t2s">繁轉簡</label>
+                    <label for="ai-conversion-mode-select">轉換模式:</label>
+                    <select id="ai-conversion-mode-select" class="text_pole">
+                        <option value="s2t">簡體 -> 繁體 (標準)</option>
+                        <option value="t2s">繁體 -> 簡體 (標準)</option>
+                        <option value="s2tw">簡體 -> 臺灣正體</option>
+                        <option value="tw2s">臺灣正體 -> 簡體</option>
+                        <option value="s2twp" selected>簡體 -> 臺灣正體 (含慣用語)</option>
+                        <option value="tw2sp">臺灣正體 (含慣用語) -> 簡體</option>
+                        <option value="s2hk">簡體 -> 香港繁體</option>
+                        <option value="hk2s">香港繁體 -> 簡體</option>
+                        <option value="t2tw">繁體 (標準) -> 臺灣正體</option>
+                        <option value="t2hk">繁體 (標準) -> 香港繁體</option>
+                    </select>
                 </div>
             </div>
     
