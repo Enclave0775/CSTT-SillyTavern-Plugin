@@ -7,9 +7,11 @@
     display: flex;
     align-items: center;
 }
+.CSTT button {
+    white-space: nowrap;
+}
 .CSTT #file-select-button {
     flex-shrink: 0; /* Prevent button from shrinking */
-    white-space:nowrap;
 }
 .CSTT .file-input-block {
     flex-direction: column;
@@ -44,7 +46,6 @@
     border-radius: 15px
 }
 .CSTT #status-area h4 {
-    margin: 0 0 8px 0; /* Adjust heading margin */
     font-weight: bold;
 }
 .CSTT #log-output {

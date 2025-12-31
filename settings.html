@@ -17,6 +17,7 @@
 
             <div class="cstt-block">
                 <label for="conversion-mode-select">轉換模式:</label>
+                <div class="cstt-block">
                 <select id="conversion-mode-select" class="text_pole">
                     <option value="s2t">簡體 -> 繁體 (標準)</option>
                     <option value="t2s">繁體 -> 簡體 (標準)</option>
@@ -29,6 +30,7 @@
                     <option value="t2tw">繁體 (標準) -> 臺灣正體</option>
                     <option value="t2hk">繁體 (標準) -> 香港繁體</option>
                 </select>
+                </div>
             </div>
 
             <div class="cstt-block">
@@ -51,6 +53,38 @@
             <div>
                 <button id="convert-button" class="menu_button">轉換</button>
             </div>
+
+            <hr>
+
+            <div class="cstt-block">
+                <h4>外掛字典 (Custom Dictionary)</h4>
+            </div>
+            <div class="cstt-block file-input-block">
+                <div id="dict-list-container" style="width: 100%; border: 1px solid var(--border-color); padding: 8px; margin-bottom: 8px; max-height: 200px; overflow-y: auto; background-color: var(--background-color-secondary); border-radius: 5px;">
+                    <!-- Dictionaries will be listed here -->
+                    <div style="font-style: italic; color: gray; text-align: center;">暫無儲存的字典</div>
+                </div>
+                <div class="file-input-controls">
+                    <input type="file" id="add-dict-input" class="text_pole" multiple accept=".txt,.json" style="display: none;">
+                    <button id="add-dict-btn" class="menu_button">新增/匯入字典...</button>
+                    <button id="clear-dicts-btn" class="menu_button">清空列表</button>
+                </div>
+            </div>
+            
+            <div class="cstt-block">
+                <h4>字典工具 (Dictionary Tools)</h4>
+            </div>
+            <div class="cstt-block">
+                <label>字典轉換:</label>
+                <input type="file" id="tool-dict-input" class="text_pole" accept=".txt" style="display: none;">
+                <button id="tool-dict-select-btn" class="menu_button">選擇 TXT 字典...</button>
+                <button id="tool-convert-json-btn" class="menu_button">轉為 JSON</button>
+            </div>
+            <div class="cstt-block">
+                <input type="checkbox" id="tool-auto-mount-checkbox" checked>
+                <label for="tool-auto-mount-checkbox">轉換後自動加入外掛字典列表</label>
+            </div>
+            <span id="tool-dict-status" style="font-style: italic; font-size: 0.8em;"></span>
 
             <hr>
 
@@ -80,7 +114,10 @@
             </div>
     
             <div id="status-area">
-                <h4>轉換日誌</h4>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <h4 style="margin: 0;">轉換日誌</h4>
+                    <button id="clear-log-btn" class="menu_button" style="padding: 2px 8px; font-size: 0.8em;">清空日誌</button>
+                </div>
                 <pre id="log-output"></pre>
             </div>
 

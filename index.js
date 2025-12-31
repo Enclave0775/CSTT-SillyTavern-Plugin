@@ -13,6 +13,49 @@ import { extension_settings, getContext } from '/scripts/extensions.js';
 const extensionName = "CSTT-SillyTavern-Plugin";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}/`;
 
+// Helper to get converter with custom dictionaries
+function getConverter(mode) {
+    if (typeof OpenCC === 'undefined') {
+        throw new Error('OpenCC library not loaded');
+    }
+    
+    const options = MODE_MAP[mode] || MODE_MAP['s2twp'];
+    const dictGroups = [];
+
+    // Prepend custom dictionaries if enabled
+    const settings = extension_settings[extensionName];
+    if (settings && settings.custom_dictionaries && Array.isArray(settings.custom_dictionaries)) {
+        // Collect all enabled dictionaries
+        const enabledDicts = settings.custom_dictionaries
+            .filter(d => d.enabled)
+            .map(d => d.content)
+            .flat(); // OpenCC accepts array of arrays, so we can flatten multiple dicts into one big list or keep them separate.
+            // Actually ConverterFactory takes DictGroup[]. A DictGroup is DictLike[]. DictLike is string[][].
+            // If we push [dict1, dict2], it's valid.
+            // But usually we want to merge them into one priority group?
+            // Let's pass them as a single group (array of entries) to the factory first?
+            // No, ConverterFactory(group1, group2, ...).
+            // Each group is tried in order? No, chained.
+            // We want our custom dicts to be the *first* group.
+            
+        if (enabledDicts.length > 0) {
+            dictGroups.push(enabledDicts);
+        }
+    }
+
+    // Add standard dictionaries based on mode
+    ['from', 'to'].forEach(type => {
+        if (options[type] && options[type] !== 't') {
+            const preset = OpenCC.Locale[type][options[type]];
+            if (preset) {
+                dictGroups.push(preset);
+            }
+        }
+    });
+
+    return OpenCC.ConverterFactory.apply(null, dictGroups);
+}
+
 // Mapping for conversion modes
 const MODE_MAP = {
     's2t': { from: 'cn', to: 't' },
@@ -160,7 +203,7 @@ function initializeAiInterception() {
                     return;
                 }
 
-                const converter = OpenCC.Converter(options);
+                const converter = getConverter(mode);
                 const original = lastMsg.mes;
                 const converted = converter(original);
 
@@ -194,7 +237,27 @@ function initializeConverter() {
     const autoImportCheckbox = document.getElementById('auto-import-checkbox');
     const importTypeBlock = document.getElementById('import-type-block');
 
+    // Custom Dictionary Elements
+    const dictListContainer = document.getElementById('dict-list-container');
+    const addDictInput = document.getElementById('add-dict-input');
+    const addDictBtn = document.getElementById('add-dict-btn');
+    const clearDictsBtn = document.getElementById('clear-dicts-btn');
+
+    // Tool Elements
+    const toolDictInput = document.getElementById('tool-dict-input');
+    const toolDictSelectBtn = document.getElementById('tool-dict-select-btn');
+    const toolConvertJsonBtn = document.getElementById('tool-convert-json-btn');
+    const toolAutoMountCheckbox = document.getElementById('tool-auto-mount-checkbox');
+    const toolDictStatus = document.getElementById('tool-dict-status');
+    const clearLogBtn = document.getElementById('clear-log-btn');
+
     function log(msg) { if (logOutput) { logOutput.appendChild(document.createTextNode(msg + '\n')); logOutput.scrollTop = logOutput.scrollHeight; } else console.log(msg); }
+
+    if (clearLogBtn) {
+        clearLogBtn.addEventListener('click', () => {
+            if (logOutput) logOutput.textContent = '';
+        });
+    }
 
     if (!fileInput || !convertButton || !fileSelectButton || !fileNameDisplay || !conversionModeSelect || !autoImportCheckbox || !importTypeBlock) {
         console.error(`${extensionName}: UI elements missing`);
@@ -222,6 +285,230 @@ function initializeConverter() {
     // Initial state
     importTypeBlock.style.display = autoImportCheckbox.checked ? 'block' : 'none';
 
+    // --- Custom Dictionary Logic ---
+    
+    // Initialize settings if needed
+    if (!extension_settings[extensionName]) extension_settings[extensionName] = {};
+    if (!extension_settings[extensionName].custom_dictionaries) extension_settings[extensionName].custom_dictionaries = [];
+    
+    function saveDicts() {
+        saveSettings();
+        renderDictList();
+    }
+
+    function renderDictList() {
+        if (!dictListContainer) return;
+        dictListContainer.innerHTML = '';
+        const dicts = extension_settings[extensionName].custom_dictionaries;
+        
+        if (dicts.length === 0) {
+            dictListContainer.innerHTML = '<div style="font-style: italic; color: gray; text-align: center;">暫無儲存的字典</div>';
+            return;
+        }
+
+        dicts.forEach((dict, index) => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.marginBottom = '4px';
+            row.style.padding = '4px';
+            row.style.backgroundColor = 'var(--background-color-tertiary)';
+            row.style.borderRadius = '4px';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = dict.enabled;
+            checkbox.style.marginRight = '8px';
+            checkbox.title = '啟用/停用';
+            checkbox.onchange = () => {
+                dict.enabled = checkbox.checked;
+                saveDicts();
+            };
+
+            const nameLabel = document.createElement('span');
+            nameLabel.textContent = `${dict.name} (${dict.content.length} 詞)`;
+            nameLabel.style.flexGrow = '1';
+            nameLabel.style.overflow = 'hidden';
+            nameLabel.style.textOverflow = 'ellipsis';
+            nameLabel.title = dict.name;
+
+            const downloadBtn = document.createElement('div');
+            downloadBtn.className = 'menu_button fa-solid fa-download';
+            downloadBtn.style.cursor = 'pointer';
+            downloadBtn.style.padding = '5px';
+            downloadBtn.style.marginRight = '5px';
+            downloadBtn.title = '下載';
+            downloadBtn.onclick = () => {
+                const isJson = dict.name.toLowerCase().endsWith('.json');
+                let contentStr = '';
+                let mimeType = 'text/plain';
+
+                if (isJson) {
+                    contentStr = JSON.stringify(dict.content, null, 2);
+                    mimeType = 'application/json';
+                } else {
+                    contentStr = dict.content.map(entry => entry.join('\t')).join('\n');
+                }
+
+                const blob = new Blob([contentStr], { type: mimeType });
+                downloadFile(blob, dict.name, log);
+            };
+
+            const delBtn = document.createElement('div');
+            delBtn.className = 'menu_button fa-solid fa-trash';
+            delBtn.style.cursor = 'pointer';
+            delBtn.style.padding = '5px';
+            delBtn.style.color = 'var(--smart-theme-color)';
+            delBtn.title = '刪除';
+            delBtn.onclick = () => {
+                if (confirm(`確定要刪除字典 "${dict.name}" 嗎?`)) {
+                    dicts.splice(index, 1);
+                    saveDicts();
+                    log(`INFO: 已刪除字典 ${dict.name}`);
+                }
+            };
+
+            row.appendChild(checkbox);
+            row.appendChild(nameLabel);
+            row.appendChild(downloadBtn);
+            row.appendChild(delBtn);
+            dictListContainer.appendChild(row);
+        });
+    }
+
+    async function readAndParseDict(file) {
+        const text = await file.text();
+        let parsed;
+        if (file.name.toLowerCase().endsWith('.json')) {
+            try {
+                const json = JSON.parse(text);
+                if (Array.isArray(json)) {
+                    parsed = json;
+                } else if (typeof json === 'object' && json !== null) {
+                    parsed = Object.entries(json);
+                }
+            } catch (e) {
+                console.warn('JSON parse failed', e);
+            }
+        }
+        if (!parsed) {
+            parsed = parseDictText(text);
+        }
+        return parsed;
+    }
+
+    function parseDictText(text) {
+        const lines = text.split(/\r?\n/);
+        const dict = [];
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            const parts = trimmed.split(/\s+/);
+            if (parts.length >= 2) {
+                dict.push([parts[0], parts[1]]);
+            }
+        }
+        return dict;
+    }
+
+    // Event Listeners
+    if (addDictBtn && addDictInput) {
+        addDictBtn.addEventListener('click', () => addDictInput.click());
+        addDictInput.addEventListener('change', async () => {
+            const files = Array.from(addDictInput.files);
+            if (files.length === 0) return;
+
+            let addedCount = 0;
+            for (const file of files) {
+                try {
+                    const content = await readAndParseDict(file);
+                    if (content && content.length > 0) {
+                        extension_settings[extensionName].custom_dictionaries.push({
+                            id: Date.now() + Math.random(),
+                            name: file.name,
+                            content: content,
+                            enabled: true
+                        });
+                        addedCount++;
+                        log(`INFO: 已加入字典 ${file.name}`);
+                    } else {
+                        log(`WARN: 字典 ${file.name} 內容為空或無法解析`);
+                    }
+                } catch (e) {
+                    log(`ERROR: 讀取 ${file.name} 失敗: ${e.message}`);
+                }
+            }
+            
+            if (addedCount > 0) {
+                saveDicts();
+                addDictInput.value = ''; // Reset
+            }
+        });
+    }
+
+    if (clearDictsBtn) {
+        clearDictsBtn.addEventListener('click', () => {
+            if (confirm('確定要清空所有已儲存的字典嗎?')) {
+                extension_settings[extensionName].custom_dictionaries = [];
+                saveDicts();
+                log('INFO: 已清空所有外掛字典');
+            }
+        });
+    }
+
+    // Initial Render
+    renderDictList();
+
+    // --- Dictionary Tools Logic ---
+    let toolDictFile = null;
+    if (toolDictSelectBtn && toolDictInput) {
+        toolDictSelectBtn.addEventListener('click', () => toolDictInput.click());
+        toolDictInput.addEventListener('change', () => {
+            if (toolDictInput.files.length > 0) {
+                toolDictFile = toolDictInput.files[0];
+                toolDictStatus.textContent = `已選擇: ${toolDictFile.name}`;
+            } else {
+                toolDictFile = null;
+                toolDictStatus.textContent = '';
+            }
+        });
+    }
+
+    if (toolConvertJsonBtn) {
+        toolConvertJsonBtn.addEventListener('click', async () => {
+            if (!toolDictFile) { alert('請先選擇字典檔案'); return; }
+            try {
+                const parsed = await readAndParseDict(toolDictFile);
+                if (!parsed || parsed.length === 0) {
+                    throw new Error('解析失敗或內容為空');
+                }
+
+                const newName = toolDictFile.name.replace(/\.txt$/i, '') + '.json';
+
+                if (toolAutoMountCheckbox && toolAutoMountCheckbox.checked) {
+                    // Auto-mount only
+                    extension_settings[extensionName].custom_dictionaries.push({
+                        id: Date.now() + Math.random(),
+                        name: newName,
+                        content: parsed,
+                        enabled: true
+                    });
+                    saveDicts();
+                    log(`INFO: 轉換後的字典 ${newName} 已自動掛載到外掛字典列表 (未下載)。`);
+                } else {
+                    // Download only
+                    const jsonStr = JSON.stringify(parsed, null, 2);
+                    const blob = new Blob([jsonStr], { type: 'application/json' });
+                    downloadFile(blob, newName, log);
+                    log('INFO: 字典已轉換為 JSON 並下載。');
+                }
+            } catch (e) {
+                log(`ERROR: 字典轉換失敗: ${e.message}`);
+            }
+        });
+    }
+
+
     convertButton.addEventListener('click', async () => {
         if (logOutput) logOutput.textContent = ''; // Clear log on new conversion
         const files = fileInput.files;
@@ -235,8 +522,7 @@ function initializeConverter() {
 
         for (const file of files) {
             try {
-                const options = MODE_MAP[mode] || MODE_MAP['s2twp'];
-                const converter = OpenCC.Converter(options);
+                const converter = getConverter(mode);
                 const name = file.name.toLowerCase();
                 let blob;
 
