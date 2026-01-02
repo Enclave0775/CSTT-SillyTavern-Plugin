@@ -411,6 +411,28 @@ function initializeConverter() {
         return dict;
     }
 
+    // Helper to add or update dictionary
+    function addOrUpdateDictionary(newDict) {
+        const dicts = extension_settings[extensionName].custom_dictionaries;
+        const existingIndex = dicts.findIndex(d => d.name === newDict.name);
+        
+        if (existingIndex !== -1) {
+            // Update existing
+            dicts[existingIndex] = newDict;
+            log(`INFO: 已更新字典 ${newDict.name}`);
+            if (typeof toastr !== 'undefined') {
+                toastr.success(`已更新並覆蓋字典: ${newDict.name}`, 'CSTT 字典管理');
+            }
+        } else {
+            // Add new
+            dicts.push(newDict);
+            log(`INFO: 已加入字典 ${newDict.name}`);
+            if (typeof toastr !== 'undefined') {
+                toastr.success(`已新增字典: ${newDict.name}`, 'CSTT 字典管理');
+            }
+        }
+    }
+
     // Event Listeners
     if (addDictBtn && addDictInput) {
         addDictBtn.addEventListener('click', () => addDictInput.click());
@@ -423,14 +445,13 @@ function initializeConverter() {
                 try {
                     const content = await readAndParseDict(file);
                     if (content && content.length > 0) {
-                        extension_settings[extensionName].custom_dictionaries.push({
+                        addOrUpdateDictionary({
                             id: Date.now() + Math.random(),
                             name: file.name,
                             content: content,
                             enabled: true
                         });
                         addedCount++;
-                        log(`INFO: 已加入字典 ${file.name}`);
                     } else {
                         log(`WARN: 字典 ${file.name} 內容為空或無法解析`);
                     }
@@ -487,7 +508,7 @@ function initializeConverter() {
 
                 if (toolAutoMountCheckbox && toolAutoMountCheckbox.checked) {
                     // Auto-mount only
-                    extension_settings[extensionName].custom_dictionaries.push({
+                    addOrUpdateDictionary({
                         id: Date.now() + Math.random(),
                         name: newName,
                         content: parsed,
