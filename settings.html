@@ -1,104 +1,31 @@
 <!-- png-chinese-converter/settings.html -->
-<div class="CSTT">
-    <div class="inline-drawer">
-        <div class="inline-drawer-toggle inline-drawer-header">
-            <b>CSTT 簡繁角色卡轉換</b>
-            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
-        </div>
-        <div class="inline-drawer-content cstt-container" style="display: none;">
-            <div class="cstt-block file-input-block">
-                <div class="file-input-controls">
-                    <label>選擇檔案:</label>
-                    <input type="file" id="file-input" class="text_pole" multiple accept=".png,.json" style="display: none;">
-                    <button id="file-select-button" class="menu_button">瀏覽...</button>
-                </div>
-                <span id="file-name-display" style="font-style: italic;">未選擇任何檔案</span>
+<div class="inline-drawer CSTT">
+    <div class="inline-drawer-toggle inline-drawer-header">
+        <b>CSTT 簡繁角色卡轉換</b>
+        <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
+    </div>
+    <div class="inline-drawer-content cstt-container" style="display: none;">
+        
+        <!-- File Conversion Drawer -->
+        <div class="inline-drawer">
+            <div class="inline-drawer-toggle inline-drawer-header">
+                <b>檔案轉換 (File Conversion)</b>
+                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
             </div>
+            <div class="inline-drawer-content" style="display: none;">
+                <div class="cstt-block file-input-block">
+                    <div class="file-input-controls">
+                        <label>選擇檔案:</label>
+                        <input type="file" id="file-input" class="text_pole" multiple accept=".png,.json" style="display: none;">
+                        <button id="file-select-button" class="menu_button">瀏覽...</button>
+                    </div>
+                    <span id="file-name-display" style="font-style: italic;">未選擇任何檔案</span>
+                </div>
 
-            <div class="cstt-block">
-                <label for="conversion-mode-select">轉換模式:</label>
                 <div class="cstt-block">
-                <select id="conversion-mode-select" class="text_pole">
-                    <option value="s2t">簡體 -> 繁體 (標準)</option>
-                    <option value="t2s">繁體 -> 簡體 (標準)</option>
-                    <option value="s2tw">簡體 -> 臺灣正體</option>
-                    <option value="tw2s">臺灣正體 -> 簡體</option>
-                    <option value="s2twp" selected>簡體 -> 臺灣正體 (含慣用語)</option>
-                    <option value="tw2sp">臺灣正體 (含慣用語) -> 簡體</option>
-                    <option value="s2hk">簡體 -> 香港繁體</option>
-                    <option value="hk2s">香港繁體 -> 簡體</option>
-                    <option value="t2tw">繁體 (標準) -> 臺灣正體</option>
-                    <option value="t2hk">繁體 (標準) -> 香港繁體</option>
-                </select>
-                </div>
-            </div>
-
-            <div class="cstt-block">
-                <input type="checkbox" id="auto-import-checkbox" checked>
-                <label for="auto-import-checkbox">自動匯入 (若失敗則改為下載)</label>
-            </div>
-
-            <div class="cstt-block" id="import-type-block">
-                <label>匯入類型:</label>
-                <input type="radio" id="import-type-char" name="import-type" value="character" checked>
-                <label for="import-type-char">角色卡</label>
-                <input type="radio" id="import-type-world" name="import-type" value="world">
-                <label for="import-type-world">世界書</label>
-                <input type="radio" id="import-type-preset" name="import-type" value="preset">
-                <label for="import-type-preset">預設</label>
-                <input type="radio" id="import-type-regex" name="import-type" value="regex">
-                <label for="import-type-regex">正規表達式</label>
-            </div>
-
-            <div>
-                <button id="convert-button" class="menu_button">轉換</button>
-            </div>
-
-            <hr>
-
-            <div class="cstt-block">
-                <h4>外掛字典 (Custom Dictionary)</h4>
-            </div>
-            <div class="cstt-block file-input-block">
-                <div id="dict-list-container" style="width: 100%; border: 1px solid var(--border-color); padding: 8px; margin-bottom: 8px; max-height: 200px; overflow-y: auto; background-color: var(--background-color-secondary); border-radius: 5px;">
-                    <!-- Dictionaries will be listed here -->
-                    <div style="font-style: italic; color: gray; text-align: center;">暫無儲存的字典</div>
-                </div>
-                <div class="file-input-controls">
-                    <input type="file" id="add-dict-input" class="text_pole" multiple accept=".txt,.json" style="display: none;">
-                    <button id="add-dict-btn" class="menu_button">新增/匯入字典...</button>
-                    <button id="clear-dicts-btn" class="menu_button">清空列表</button>
-                </div>
-            </div>
-            
-            <div class="cstt-block">
-                <h4>字典工具 (Dictionary Tools)</h4>
-            </div>
-            <div class="cstt-block">
-                <label>字典轉換:</label>
-                <input type="file" id="tool-dict-input" class="text_pole" accept=".txt" style="display: none;">
-                <button id="tool-dict-select-btn" class="menu_button">選擇 TXT 字典...</button>
-                <button id="tool-convert-json-btn" class="menu_button">轉為 JSON</button>
-            </div>
-            <div class="cstt-block">
-                <input type="checkbox" id="tool-auto-mount-checkbox" checked>
-                <label for="tool-auto-mount-checkbox">轉換後自動加入外掛字典列表</label>
-            </div>
-            <span id="tool-dict-status" style="font-style: italic; font-size: 0.8em;"></span>
-
-            <hr>
-
-            <div class="cstt-block">
-                <h4>AI 回覆即時轉換</h4>
-                <div class="cstt-block">
-                    <input type="checkbox" id="ai-convert-enable">
-                    <label for="ai-convert-enable">啟用 AI 回覆攔截轉換</label>
-                </div>
-            </div>
-            <div class="cstt-block">
-                <div class="cstt-block" id="ai-convert-mode-block" style="display: none;">
-                    <label for="ai-conversion-mode-select">轉換模式:</label>
-                    <select id="ai-conversion-mode-select" class="text_pole">
+                    <label for="conversion-mode-select">轉換模式:</label>
+                    <div class="cstt-block">
+                    <select id="conversion-mode-select" class="text_pole">
                         <option value="s2t">簡體 -> 繁體 (標準)</option>
                         <option value="t2s">繁體 -> 簡體 (標準)</option>
                         <option value="s2tw">簡體 -> 臺灣正體</option>
@@ -110,26 +37,121 @@
                         <option value="t2tw">繁體 (標準) -> 臺灣正體</option>
                         <option value="t2hk">繁體 (標準) -> 香港繁體</option>
                     </select>
+                    </div>
                 </div>
-            </div>
-    
-            <div id="status-area">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h4 style="margin: 0;">轉換日誌</h4>
-                    <button id="clear-log-btn" class="menu_button" style="padding: 2px 8px; font-size: 0.8em;">清空日誌</button>
-                </div>
-                <pre id="log-output"></pre>
-            </div>
 
-            <hr>
-            <div>
-                <p>對於插件有問題可聯絡提問</p>
-                <p>原作者 (Original Author):</p>
-                <ul>
-                    <li>Discord: enclave_x0775</li>
-                    <li>Telegram: @Enclave_X</li>
-                </ul>
+                <div class="cstt-block">
+                    <input type="checkbox" id="auto-import-checkbox" checked>
+                    <label for="auto-import-checkbox">自動匯入 (若失敗則改為下載)</label>
+                </div>
+
+                <div class="cstt-block" id="import-type-block">
+                    <label>匯入類型:</label>
+                    <input type="radio" id="import-type-char" name="import-type" value="character" checked>
+                    <label for="import-type-char">角色卡</label>
+                    <input type="radio" id="import-type-world" name="import-type" value="world">
+                    <label for="import-type-world">世界書</label>
+                    <input type="radio" id="import-type-preset" name="import-type" value="preset">
+                    <label for="import-type-preset">預設</label>
+                    <input type="radio" id="import-type-regex" name="import-type" value="regex">
+                    <label for="import-type-regex">正規表達式</label>
+                </div>
+
+                <div>
+                    <button id="convert-button" class="menu_button">轉換</button>
+                </div>
             </div>
+        </div>
+
+        <!-- Custom Dictionary Drawer -->
+        <div class="inline-drawer">
+            <div class="inline-drawer-toggle inline-drawer-header">
+                <b>外掛字典管理 (Custom Dictionary)</b>
+                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
+            </div>
+            <div class="inline-drawer-content" style="display: none;">
+                <div class="cstt-block file-input-block">
+                    <div id="dict-list-container" style="width: 100%; border: 1px solid var(--border-color); padding: 8px; margin-bottom: 8px; max-height: 200px; overflow-y: auto; background-color: var(--background-color-secondary); border-radius: 5px;">
+                        <div style="font-style: italic; color: gray; text-align: center;">暫無儲存的字典</div>
+                    </div>
+                    <div class="file-input-controls">
+                        <input type="file" id="add-dict-input" class="text_pole" multiple accept=".txt,.json" style="display: none;">
+                        <button id="add-dict-btn" class="menu_button">新增/匯入字典...</button>
+                        <button id="clear-dicts-btn" class="menu_button">清空列表</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dictionary Tools Drawer -->
+        <div class="inline-drawer">
+            <div class="inline-drawer-toggle inline-drawer-header">
+                <b>字典工具 (Dictionary Tools)</b>
+                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
+            </div>
+            <div class="inline-drawer-content" style="display: none;">
+                <div class="cstt-block">
+                    <label>字典轉換:</label>
+                    <input type="file" id="tool-dict-input" class="text_pole" accept=".txt" style="display: none;">
+                    <button id="tool-dict-select-btn" class="menu_button">選擇 TXT 字典...</button>
+                    <button id="tool-convert-json-btn" class="menu_button">轉為 JSON</button>
+                </div>
+                <div class="cstt-block">
+                    <input type="checkbox" id="tool-auto-mount-checkbox" checked>
+                    <label for="tool-auto-mount-checkbox">轉換後自動加入外掛字典列表</label>
+                </div>
+                <span id="tool-dict-status" style="font-style: italic; font-size: 0.8em;"></span>
+            </div>
+        </div>
+
+        <!-- AI Response Conversion Drawer -->
+        <div class="inline-drawer">
+            <div class="inline-drawer-toggle inline-drawer-header">
+                <b>AI 回覆即時轉換</b>
+                <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
+            </div>
+            <div class="inline-drawer-content" style="display: none;">
+                <div class="cstt-block">
+                    <input type="checkbox" id="ai-convert-enable">
+                    <label for="ai-convert-enable">啟用 AI 回覆攔截轉換</label>
+                </div>
+                <div class="cstt-block">
+                    <div class="cstt-block" id="ai-convert-mode-block" style="display: none;">
+                        <label for="ai-conversion-mode-select">轉換模式:</label>
+                        <select id="ai-conversion-mode-select" class="text_pole">
+                            <option value="s2t">簡體 -> 繁體 (標準)</option>
+                            <option value="t2s">繁體 -> 簡體 (標準)</option>
+                            <option value="s2tw">簡體 -> 臺灣正體</option>
+                            <option value="tw2s">臺灣正體 -> 簡體</option>
+                            <option value="s2twp" selected>簡體 -> 臺灣正體 (含慣用語)</option>
+                            <option value="tw2sp">臺灣正體 (含慣用語) -> 簡體</option>
+                            <option value="s2hk">簡體 -> 香港繁體</option>
+                            <option value="hk2s">香港繁體 -> 簡體</option>
+                            <option value="t2tw">繁體 (標準) -> 臺灣正體</option>
+                            <option value="t2hk">繁體 (標準) -> 香港繁體</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Area (Keep visible for feedback) -->
+        <div id="status-area">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h4 style="margin: 0;">轉換日誌</h4>
+                <button id="clear-log-btn" class="menu_button" style="padding: 2px 8px; font-size: 0.8em;">清空日誌</button>
+            </div>
+            <pre id="log-output"></pre>
+        </div>
+
+        <hr>
+        <div>
+            <p>對於插件有問題可聯絡提問</p>
+            <p>原作者 (Original Author):</p>
+            <ul>
+                <li>Discord: enclave_x0775</li>
+                <li>Telegram: @Enclave_X</li>
+            </ul>
         </div>
     </div>
 </div>

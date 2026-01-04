@@ -623,6 +623,7 @@ function initializeConverter() {
                             log(`✓ 已提交預設檔案: ${file.name}`);
                         } catch (err) {
                             log(`❌ 匯入預設檔案 ${file.name} 時發生錯誤: ${err.message}`);
+                            if (typeof toastr !== 'undefined') toastr.error(`匯入預設檔案 ${file.name} 失敗: ${err.message}`, 'CSTT');
                             console.error(err);
                         }
                     }
@@ -633,6 +634,7 @@ function initializeConverter() {
                             mes: `已成功提交 ${files.length} 個預設檔案進行匯入。`,
                         });
                     }
+                    if (typeof toastr !== 'undefined') toastr.success(`已成功匯入 ${files.length} 個預設檔案`, 'CSTT');
                 } else {
                     throw new Error('找不到 TavernHelper.importRawPreset 或 TavernHelper.addOneMessage 功能。請確認 JS-Slash-Runner 擴充功能已正確安裝及啟用。');
                 }
@@ -702,6 +704,7 @@ function initializeConverter() {
                             let json;
                             try { json = JSON.parse(content); } catch (e) { 
                                 log(`❌ 檔案 ${file.name} 解析失敗: 无效的 JSON`);
+                                if (typeof toastr !== 'undefined') toastr.error(`檔案 ${file.name} 解析失敗`, 'CSTT');
                                 continue; 
                             }
                             
@@ -724,15 +727,19 @@ function initializeConverter() {
                                     mes: `已成功透過 API 匯入 ${newRegexes.length} 條正規表達式規則。`,
                                 });
                             }
+                            if (typeof toastr !== 'undefined') toastr.success(`已成功匯入 ${newRegexes.length} 條正規表達式`, 'CSTT');
                         } else {
                             log('⚠️ 未找到可匯入的正規表達式資料。');
+                            if (typeof toastr !== 'undefined') toastr.warning('未找到可匯入的正規表達式資料', 'CSTT');
                         }
                     } catch (e) {
                         console.error("Regex API import failed", e);
                         log(`❌ API 匯入失敗: ${e.message}`);
+                        if (typeof toastr !== 'undefined') toastr.error(`API 匯入失敗: ${e.message}`, 'CSTT');
                     }
                 } else {
                     log('❌ 錯誤: 找不到酒館助手 (JS-Slash-Runner) 正規表達式 API。');
+                    if (typeof toastr !== 'undefined') toastr.error('找不到酒館助手正規表達式 API', 'CSTT');
                     console.log("Available TavernHelper keys:", Object.keys(th));
                     console.error('Regex APIs not found on window or TavernHelper.');
                 }
@@ -748,6 +755,7 @@ function initializeConverter() {
             }
         } catch (e) {
             log(`❌ 模擬匯入時發生錯誤: ${e.message}`);
+            if (typeof toastr !== 'undefined') toastr.error(`匯入失敗: ${e.message}`, 'CSTT');
             console.error(e);
             const downloadTasks = files.map(file => downloadFile(file, file.name, log));
             await Promise.all(downloadTasks);
