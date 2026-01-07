@@ -296,6 +296,16 @@ function initializeConverter() {
         renderDictList();
     }
 
+    // Editor State and Elements
+    let currentEditingDictId = null;
+    const editorModal = document.getElementById('cstt-dict-editor-modal');
+    const editorNameInput = document.getElementById('cstt-dict-name');
+    const editorEntriesContainer = document.getElementById('cstt-dict-entries');
+    const editorAddEntryBtn = document.getElementById('cstt-add-entry-btn');
+    const editorSaveBtn = document.getElementById('cstt-save-dict-btn');
+    const editorCancelBtn = document.getElementById('cstt-cancel-dict-btn');
+    const createDictBtn = document.getElementById('create-dict-btn');
+
     function renderDictList() {
         if (!dictListContainer) return;
         dictListContainer.innerHTML = '';
@@ -331,6 +341,15 @@ function initializeConverter() {
             nameLabel.style.overflow = 'hidden';
             nameLabel.style.textOverflow = 'ellipsis';
             nameLabel.title = dict.name;
+
+            // Edit Button
+            const editBtn = document.createElement('div');
+            editBtn.className = 'menu_button fa-solid fa-pen-to-square';
+            editBtn.style.cursor = 'pointer';
+            editBtn.style.padding = '5px';
+            editBtn.style.marginRight = '5px';
+            editBtn.title = '編輯';
+            editBtn.onclick = () => openEditor(dict);
 
             const downloadBtn = document.createElement('div');
             downloadBtn.className = 'menu_button fa-solid fa-download';
@@ -370,11 +389,99 @@ function initializeConverter() {
 
             row.appendChild(checkbox);
             row.appendChild(nameLabel);
+            row.appendChild(editBtn); // Add edit btn
             row.appendChild(downloadBtn);
             row.appendChild(delBtn);
             dictListContainer.appendChild(row);
         });
     }
+
+    // Editor Functions
+    function openEditor(dict) {
+        if (dict && !dict.id) {
+            dict.id = Date.now() + Math.random();
+        }
+        currentEditingDictId = dict ? dict.id : null;
+        editorNameInput.value = dict ? dict.name : '';
+        editorEntriesContainer.innerHTML = '';
+        
+        const content = dict ? dict.content : [];
+        if (content.length === 0 && !dict) {
+            addEditorEntryRow();
+        } else {
+            content.forEach(entry => addEditorEntryRow(entry[0], entry[1]));
+        }
+        editorModal.style.display = 'flex';
+    }
+
+    function addEditorEntryRow(origin = '', replacement = '') {
+        const row = document.createElement('div');
+        row.className = 'cstt-dict-entry-row';
+        
+        const inputOrigin = document.createElement('input');
+        inputOrigin.type = 'text';
+        inputOrigin.className = 'text_pole';
+        inputOrigin.placeholder = '原文';
+        inputOrigin.value = origin;
+
+        const inputReplace = document.createElement('input');
+        inputReplace.type = 'text';
+        inputReplace.className = 'text_pole';
+        inputReplace.placeholder = '替換';
+        inputReplace.value = replacement;
+
+        const delBtn = document.createElement('div');
+        delBtn.className = 'menu_button fa-solid fa-trash';
+        delBtn.style.padding = '5px';
+        delBtn.style.color = 'var(--smart-theme-color)';
+        delBtn.style.cursor = 'pointer';
+        delBtn.onclick = () => row.remove();
+
+        row.appendChild(inputOrigin);
+        row.appendChild(inputReplace);
+        row.appendChild(delBtn);
+        editorEntriesContainer.appendChild(row);
+    }
+
+    function saveEditor() {
+        const name = editorNameInput.value.trim();
+        if (!name) {
+            alert('請輸入字典名稱');
+            return;
+        }
+
+        const entries = [];
+        const rows = editorEntriesContainer.querySelectorAll('.cstt-dict-entry-row');
+        rows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            const origin = inputs[0].value;
+            const replace = inputs[1].value;
+            if (origin) {
+                entries.push([origin, replace]);
+            }
+        });
+
+        const newDict = {
+            id: currentEditingDictId || Date.now() + Math.random(),
+            name: name,
+            content: entries,
+            enabled: true
+        };
+
+        addOrUpdateDictionary(newDict);
+        saveDicts();
+        closeEditor();
+    }
+
+    function closeEditor() {
+        editorModal.style.display = 'none';
+    }
+
+    // Bind Editor Events
+    if (createDictBtn) createDictBtn.onclick = () => openEditor(null);
+    if (editorAddEntryBtn) editorAddEntryBtn.onclick = () => addEditorEntryRow();
+    if (editorSaveBtn) editorSaveBtn.onclick = saveEditor;
+    if (editorCancelBtn) editorCancelBtn.onclick = closeEditor;
 
     async function readAndParseDict(file) {
         const text = await file.text();
@@ -414,17 +521,25 @@ function initializeConverter() {
     // Helper to add or update dictionary
     function addOrUpdateDictionary(newDict) {
         const dicts = extension_settings[extensionName].custom_dictionaries;
-        const existingIndex = dicts.findIndex(d => d.name === newDict.name);
+        let existingIndex = -1;
+        if (newDict.id) {
+            existingIndex = dicts.findIndex(d => d.id === newDict.id);
+        }
+        if (existingIndex === -1) {
+            existingIndex = dicts.findIndex(d => d.name === newDict.name);
+        }
         
         if (existingIndex !== -1) {
-            // Update existing
+            if (!newDict.id && dicts[existingIndex].id) {
+                newDict.id = dicts[existingIndex].id;
+            }
             dicts[existingIndex] = newDict;
             log(`INFO: 已更新字典 ${newDict.name}`);
             if (typeof toastr !== 'undefined') {
                 toastr.success(`已更新並覆蓋字典: ${newDict.name}`, 'CSTT 字典管理');
             }
         } else {
-            // Add new
+            if (!newDict.id) newDict.id = Date.now() + Math.random();
             dicts.push(newDict);
             log(`INFO: 已加入字典 ${newDict.name}`);
             if (typeof toastr !== 'undefined') {

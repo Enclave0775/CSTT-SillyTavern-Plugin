@@ -76,7 +76,8 @@
                     </div>
                     <div class="file-input-controls">
                         <input type="file" id="add-dict-input" class="text_pole" multiple accept=".txt,.json" style="display: none;">
-                        <button id="add-dict-btn" class="menu_button">新增/匯入字典...</button>
+                        <button id="create-dict-btn" class="menu_button">新建字典</button>
+                        <button id="add-dict-btn" class="menu_button">匯入字典...</button>
                         <button id="clear-dicts-btn" class="menu_button">清空列表</button>
                     </div>
                 </div>
@@ -152,6 +153,32 @@
                 <li>Discord: enclave_x0775</li>
                 <li>Telegram: @Enclave_X</li>
             </ul>
+        </div>
+    </div>
+
+    <!-- Dictionary Editor Modal -->
+    <div id="cstt-dict-editor-modal" class="cstt-modal" style="display: none;">
+        <div class="cstt-modal-content">
+            <h3>編輯字典 (Edit Dictionary)</h3>
+            <div class="cstt-block">
+                <label>名稱:</label>
+                <input type="text" id="cstt-dict-name" class="text_pole" placeholder="My Dictionary">
+            </div>
+            <div style="margin: 10px 0; max-height: 400px; overflow-y: auto;">
+                <div class="cstt-dict-header-row" style="display: flex; gap: 5px; font-weight: bold; margin-bottom: 5px;">
+                    <span style="flex: 1;">原文 (Original)</span>
+                    <span style="flex: 1;">替換 (Replacement)</span>
+                    <span style="width: 30px;"></span>
+                </div>
+                <div id="cstt-dict-entries">
+                    <!-- Entries injected via JS -->
+                </div>
+            </div>
+            <button id="cstt-add-entry-btn" class="menu_button"><i class="fa-solid fa-plus"></i> 新增詞條</button>
+            <div class="cstt-modal-footer">
+                <button id="cstt-save-dict-btn" class="menu_button">儲存</button>
+                <button id="cstt-cancel-dict-btn" class="menu_button">取消</button>
+            </div>
         </div>
     </div>
 </div>
