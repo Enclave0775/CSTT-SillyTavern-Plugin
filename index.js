@@ -237,6 +237,17 @@ function initializeConverter() {
     const autoImportCheckbox = document.getElementById('auto-import-checkbox');
     const importTypeBlock = document.getElementById('import-type-block');
 
+    // Load saved conversion mode
+    if (!extension_settings[extensionName]) extension_settings[extensionName] = {};
+    if (extension_settings[extensionName].conversionMode) {
+        conversionModeSelect.value = extension_settings[extensionName].conversionMode;
+    }
+
+    conversionModeSelect.addEventListener('change', () => {
+        extension_settings[extensionName].conversionMode = conversionModeSelect.value;
+        saveSettings();
+    });
+
     // Custom Dictionary Elements
     const dictListContainer = document.getElementById('dict-list-container');
     const addDictInput = document.getElementById('add-dict-input');
