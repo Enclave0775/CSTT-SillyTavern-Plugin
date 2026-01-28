@@ -243,6 +243,10 @@ function initializeConverter() {
         conversionModeSelect.value = extension_settings[extensionName].conversionMode;
     }
 
+    if (extension_settings[extensionName].autoImport !== undefined) {
+        autoImportCheckbox.checked = extension_settings[extensionName].autoImport;
+    }
+
     conversionModeSelect.addEventListener('change', () => {
         extension_settings[extensionName].conversionMode = conversionModeSelect.value;
         saveSettings();
@@ -261,6 +265,31 @@ function initializeConverter() {
     const toolAutoMountCheckbox = document.getElementById('tool-auto-mount-checkbox');
     const toolDictStatus = document.getElementById('tool-dict-status');
     const clearLogBtn = document.getElementById('clear-log-btn');
+
+    // Load saved settings for tool checkboxes
+    if (extension_settings[extensionName].toolAutoMount !== undefined) {
+        toolAutoMountCheckbox.checked = extension_settings[extensionName].toolAutoMount;
+    }
+
+    toolAutoMountCheckbox.addEventListener('change', () => {
+        extension_settings[extensionName].toolAutoMount = toolAutoMountCheckbox.checked;
+        saveSettings();
+    });
+
+    // Load saved settings for import type radio
+    if (extension_settings[extensionName].importType) {
+        const radio = document.querySelector(`input[name="import-type"][value="${extension_settings[extensionName].importType}"]`);
+        if (radio) radio.checked = true;
+    }
+
+    document.querySelectorAll('input[name="import-type"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.checked) {
+                extension_settings[extensionName].importType = radio.value;
+                saveSettings();
+            }
+        });
+    });
 
     function log(msg) { if (logOutput) { logOutput.appendChild(document.createTextNode(msg + '\n')); logOutput.scrollTop = logOutput.scrollHeight; } else console.log(msg); }
 
@@ -292,6 +321,8 @@ function initializeConverter() {
 
     autoImportCheckbox.addEventListener('change', () => {
         importTypeBlock.style.display = autoImportCheckbox.checked ? 'block' : 'none';
+        extension_settings[extensionName].autoImport = autoImportCheckbox.checked;
+        saveSettings();
     });
     // Initial state
     importTypeBlock.style.display = autoImportCheckbox.checked ? 'block' : 'none';
