@@ -22,26 +22,19 @@ function getConverter(mode) {
     const options = MODE_MAP[mode] || MODE_MAP['s2twp'];
     const dictGroups = [];
 
-    // Prepend custom dictionaries if enabled
+    // Custom dictionaries are handled via placeholder protection mechanism
     const settings = extension_settings[extensionName];
+    let customEntries = [];
+
     if (settings && settings.custom_dictionaries && Array.isArray(settings.custom_dictionaries)) {
-        // Collect all enabled dictionaries
-        const enabledDicts = settings.custom_dictionaries
+        customEntries = settings.custom_dictionaries
             .filter(d => d.enabled)
             .map(d => d.content)
-            .flat(); // OpenCC accepts array of arrays, so we can flatten multiple dicts into one big list or keep them separate.
-            // Actually ConverterFactory takes DictGroup[]. A DictGroup is DictLike[]. DictLike is string[][].
-            // If we push [dict1, dict2], it's valid.
-            // But usually we want to merge them into one priority group?
-            // Let's pass them as a single group (array of entries) to the factory first?
-            // No, ConverterFactory(group1, group2, ...).
-            // Each group is tried in order? No, chained.
-            // We want our custom dicts to be the *first* group.
-            
-        if (enabledDicts.length > 0) {
-            dictGroups.push(enabledDicts);
-        }
+            .flat(); 
     }
+    
+    // Sort by length descending to handle overlapping matches (longest match first)
+    customEntries.sort((a, b) => b[0].length - a[0].length);
 
     // Add standard dictionaries based on mode
     ['from', 'to'].forEach(type => {
@@ -53,7 +46,43 @@ function getConverter(mode) {
         }
     });
 
-    return OpenCC.ConverterFactory.apply(null, dictGroups);
+    const openccConverter = OpenCC.ConverterFactory.apply(null, dictGroups);
+
+    return function(text) {
+        if (!text) return text;
+        
+        // Optimization: if no custom entries, just run opencc
+        if (customEntries.length === 0) {
+            return openccConverter(text);
+        }
+
+        const placeholders = [];
+        let protectedText = text;
+
+        for (let i = 0; i < customEntries.length; i++) {
+            const [origin, replacement] = customEntries[i];
+            if (!origin) continue;
+            
+            // Only replace if the text actually contains the origin
+            if (protectedText.includes(origin)) {
+                // Use Private Use Area characters to wrap index
+                const placeholder = `\uE000${i}\uE001`;
+                const escapedOrigin = origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                // Replace all occurrences
+                protectedText = protectedText.replace(new RegExp(escapedOrigin, 'g'), placeholder);
+                placeholders.push({ ph: placeholder, rep: replacement });
+            }
+        }
+
+        let convertedText = openccConverter(protectedText);
+
+        // Restore
+        for (const { ph, rep } of placeholders) {
+             convertedText = convertedText.split(ph).join(rep);
+        }
+
+        return convertedText;
+    };
 }
 
 // Mapping for conversion modes

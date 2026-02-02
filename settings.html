@@ -161,7 +161,7 @@
         <div class="cstt-modal-content">
             <h3>編輯字典 (Edit Dictionary)</h3>
             <p style="font-size: 0.85em; color: var(--text-color-secondary); margin-bottom: 10px;">
-                注意：OpenCC 轉換為字元匹配，若使用英文單字可能會匹配到單字的一部分（例如 "us" 會替換 "status" 中的 "us"）。建議僅用於中文或特殊名詞。
+                注意：自定義字典具有最高優先級。若設定單字規則（如 "面"->"面"）導致詞彙轉換錯誤（如 "冷面"->"冷麵" 變成 "冷面"），請將正確的詞彙規則（"冷面"->"冷麵"）也加入字典。系統會優先匹配較長的詞彙。
             </p>
             <div class="cstt-block">
                 <label>名稱:</label>
