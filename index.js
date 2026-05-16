@@ -23,16 +23,13 @@ function getConverter(mode) {
     const dictGroups = [];
 
     // Custom dictionaries are handled via placeholder protection mechanism
-    const settings = extension_settings[extensionName];
-    let customEntries = [];
+    const settings = getSettings();
+    let customEntries = settings.custom_dictionaries
+        .filter(d => d.enabled)
+        .map(d => d.content)
+        .flat()
+        .filter(entry => Array.isArray(entry) && typeof entry[0] === 'string' && entry[0].length > 0);
 
-    if (settings && settings.custom_dictionaries && Array.isArray(settings.custom_dictionaries)) {
-        customEntries = settings.custom_dictionaries
-            .filter(d => d.enabled)
-            .map(d => d.content)
-            .flat(); 
-    }
-    
     // Sort by length descending to handle overlapping matches (longest match first)
     customEntries.sort((a, b) => b[0].length - a[0].length);
 
@@ -65,8 +62,7 @@ function getConverter(mode) {
             
             // Only replace if the text actually contains the origin
             if (protectedText.includes(origin)) {
-                // Use Private Use Area characters to wrap index
-                const placeholder = `\uE000${i}\uE001`;
+                const placeholder = makePlaceholder(i);
                 const escapedOrigin = origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 // Replace all occurrences
                 protectedText = protectedText.replace(new RegExp(escapedOrigin, 'g'), placeholder);
@@ -98,6 +94,84 @@ const MODE_MAP = {
     't2tw': { from: 't', to: 'tw' },
     't2hk': { from: 't', to: 'hk' }
 };
+
+const DEFAULT_SETTINGS = {
+    language: 'zh-TW',
+    conversionMode: 's2twp',
+    autoImport: true,
+    importType: 'character',
+    toolAutoMount: true,
+    aiConvertEnabled: false,
+    aiConvertMode: 's2twp',
+    jsonConversionScope: 'all',
+    jsonSelectedFields: 'name,description,personality,scenario,first_mes,mes,creator_notes,system_prompt,post_history_instructions,scriptName,replaceString,comment,content,entries,keys,secondary_keys'
+};
+
+const I18N = {
+    'zh-TW': {
+        title: 'CSTT 簡繁角色卡轉換', fileConversion: '檔案轉換 (File Conversion)', language: '介面語言:', selectFiles: '選擇檔案:', browse: '瀏覽...', noFiles: '未選擇任何檔案', conversionMode: '轉換模式:', autoImport: '自動匯入 (若失敗則改為下載)', importType: '匯入類型:', character: '角色卡', world: '世界書', preset: '預設', regex: '正規表達式', jsonScope: 'JSON 字串轉換範圍:', jsonAll: '轉換所有字串欄位', jsonSelected: '只轉換選定欄位', jsonFields: '欄位名稱/路徑（逗號分隔）:', convert: '轉換', customDictionary: '外掛字典管理 (Custom Dictionary)', createDictionary: '新建字典', importDictionary: '匯入字典...', clearList: '清空列表', dictionaryTools: '字典工具 (Dictionary Tools)', dictionaryConvert: '字典轉換:', selectTxtDictionary: '選擇 TXT 字典...', convertToJson: '轉為 JSON', autoMountDictionary: '轉換後自動加入外掛字典列表', aiConversion: 'AI 回覆即時轉換', enableAiConversion: '啟用 AI 回覆攔截轉換', logTitle: '轉換日誌', clearLog: '清空日誌', contact: '對於插件有問題可聯絡提問', originalAuthor: '原作者 (Original Author):', editDictionary: '編輯字典 (Edit Dictionary)', dictNotice: '注意：自定義字典具有最高優先級。若設定單字規則導致詞彙轉換錯誤，請將正確的詞彙規則也加入字典。系統會優先匹配較長的詞彙。', name: '名稱:', original: '原文 (Original)', replacement: '替換 (Replacement)', addEntry: '新增詞條', save: '儲存', cancel: '取消'
+    },
+    'zh-CN': {
+        title: 'CSTT 简繁角色卡转换', fileConversion: '文件转换 (File Conversion)', language: '界面语言:', selectFiles: '选择文件:', browse: '浏览...', noFiles: '未选择任何文件', conversionMode: '转换模式:', autoImport: '自动导入（若失败则改为下载）', importType: '导入类型:', character: '角色卡', world: '世界书', preset: '预设', regex: '正则表达式', jsonScope: 'JSON 字符串转换范围:', jsonAll: '转换所有字符串字段', jsonSelected: '只转换选定字段', jsonFields: '字段名称/路径（逗号分隔）:', convert: '转换', customDictionary: '外挂字典管理 (Custom Dictionary)', createDictionary: '新建字典', importDictionary: '导入字典...', clearList: '清空列表', dictionaryTools: '字典工具 (Dictionary Tools)', dictionaryConvert: '字典转换:', selectTxtDictionary: '选择 TXT 字典...', convertToJson: '转为 JSON', autoMountDictionary: '转换后自动加入外挂字典列表', aiConversion: 'AI 回复实时转换', enableAiConversion: '启用 AI 回复拦截转换', logTitle: '转换日志', clearLog: '清空日志', contact: '插件有问题可联系提问', originalAuthor: '原作者 (Original Author):', editDictionary: '编辑字典 (Edit Dictionary)', dictNotice: '注意：自定义字典具有最高优先级。若设置单字规则导致词汇转换错误，请将正确的词汇规则也加入字典。系统会优先匹配较长的词汇。', name: '名称:', original: '原文 (Original)', replacement: '替换 (Replacement)', addEntry: '新增词条', save: '保存', cancel: '取消'
+    },
+    'en': {
+        title: 'CSTT Chinese Converter', fileConversion: 'File Conversion', language: 'Interface language:', selectFiles: 'Select files:', browse: 'Browse...', noFiles: 'No files selected', conversionMode: 'Conversion mode:', autoImport: 'Auto import (download if it fails)', importType: 'Import type:', character: 'Character card', world: 'World info', preset: 'Preset', regex: 'Regex', jsonScope: 'JSON string conversion scope:', jsonAll: 'Convert all string fields', jsonSelected: 'Convert selected fields only', jsonFields: 'Field names/paths (comma separated):', convert: 'Convert', customDictionary: 'Custom Dictionary', createDictionary: 'Create dictionary', importDictionary: 'Import dictionary...', clearList: 'Clear list', dictionaryTools: 'Dictionary Tools', dictionaryConvert: 'Dictionary conversion:', selectTxtDictionary: 'Select TXT dictionary...', convertToJson: 'Convert to JSON', autoMountDictionary: 'Add converted dictionary to custom dictionary list', aiConversion: 'Live AI Response Conversion', enableAiConversion: 'Enable AI response interception conversion', logTitle: 'Conversion log', clearLog: 'Clear log', contact: 'Contact the author if you have plugin issues.', originalAuthor: 'Original Author:', editDictionary: 'Edit Dictionary', dictNotice: 'Custom dictionaries have the highest priority. If a single-character rule causes incorrect phrase conversion, add the correct longer phrase rule as well. Longer phrases are matched first.', name: 'Name:', original: 'Original', replacement: 'Replacement', addEntry: 'Add entry', save: 'Save', cancel: 'Cancel'
+    }
+};
+
+function getSettings() {
+    if (!extension_settings[extensionName]) extension_settings[extensionName] = {};
+    const settings = extension_settings[extensionName];
+    for (const [key, value] of Object.entries(DEFAULT_SETTINGS)) {
+        if (settings[key] === undefined) settings[key] = value;
+    }
+    settings.custom_dictionaries = normalizeDictionaries(settings.custom_dictionaries);
+    return settings;
+}
+
+function normalizeDictionaries(input) {
+    if (!Array.isArray(input)) return [];
+    return input.map((dict) => {
+        const content = Array.isArray(dict?.content) ? dict.content : [];
+        return {
+            id: dict?.id || Date.now() + Math.random(),
+            name: String(dict?.name || 'Dictionary'),
+            enabled: dict?.enabled !== false,
+            content: content
+                .filter(entry => Array.isArray(entry) && entry.length >= 2 && typeof entry[0] === 'string')
+                .map(entry => [entry[0], typeof entry[1] === 'string' ? entry[1] : String(entry[1] ?? '')])
+        };
+    });
+}
+
+function getCurrentLanguage() {
+    const lang = getSettings().language;
+    return I18N[lang] ? lang : 'zh-TW';
+}
+
+function t(key) {
+    return I18N[getCurrentLanguage()][key] || I18N['zh-TW'][key] || key;
+}
+
+function applyTranslations() {
+    // Scope translations strictly to this extension. SillyTavern itself also uses
+    // data-i18n attributes, so querying the whole document would overwrite core UI labels.
+    const root = document.querySelector('.CSTT');
+    if (!root) return;
+
+    root.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (key) el.textContent = t(key);
+    });
+
+    const fileNameDisplay = root.querySelector('#file-name-display');
+    if (fileNameDisplay && fileNameDisplay.dataset.empty === 'true') fileNameDisplay.textContent = t('noFiles');
+}
+
+function makePlaceholder(index) {
+    const randomPart = (crypto?.randomUUID?.() || `${Date.now()}_${Math.random()}`).replace(/-/g, '_');
+    return `\uE000CSTT_${randomPart}_${index}\uE001`;
+}
 
 function loadCss(href) {
     if (document.querySelector(`link[href="${href}"]`)) return Promise.resolve();
@@ -152,11 +226,7 @@ async function setup() {
 }
 
 function initializeAiInterception() {
-    // Ensure settings object exists
-    if (!extension_settings[extensionName]) {
-        extension_settings[extensionName] = {};
-    }
-    const settings = extension_settings[extensionName];
+    const settings = getSettings();
 
     // UI Elements
     const enableCheckbox = document.getElementById('ai-convert-enable');
@@ -193,7 +263,8 @@ function initializeAiInterception() {
     // Register Generation Event Listener
     if (!window._cstt_event_registered) {
         const handleGenerationEnded = async () => {
-            if (!settings.aiConvertEnabled) {
+            const currentSettings = getSettings();
+            if (!currentSettings.aiConvertEnabled) {
                 return;
             }
 
@@ -224,7 +295,7 @@ function initializeAiInterception() {
                     return;
                 }
 
-                const mode = settings.aiConvertMode || 's2twp';
+                const mode = currentSettings.aiConvertMode || 's2twp';
                 const options = MODE_MAP[mode] || MODE_MAP['s2twp'];
                 
                 if (typeof OpenCC === 'undefined') {
@@ -265,21 +336,30 @@ function initializeConverter() {
     const conversionModeSelect = document.getElementById('conversion-mode-select');
     const autoImportCheckbox = document.getElementById('auto-import-checkbox');
     const importTypeBlock = document.getElementById('import-type-block');
+    const languageSelect = document.getElementById('cstt-language-select');
+    const jsonFieldsBlock = document.getElementById('json-fields-block');
+    const jsonFieldsInput = document.getElementById('json-fields-input');
 
-    // Load saved conversion mode
-    if (!extension_settings[extensionName]) extension_settings[extensionName] = {};
-    if (extension_settings[extensionName].conversionMode) {
-        conversionModeSelect.value = extension_settings[extensionName].conversionMode;
-    }
+    const settings = getSettings();
 
-    if (extension_settings[extensionName].autoImport !== undefined) {
-        autoImportCheckbox.checked = extension_settings[extensionName].autoImport;
-    }
+    // Load saved settings
+    if (languageSelect) languageSelect.value = getCurrentLanguage();
+    conversionModeSelect.value = settings.conversionMode;
+    autoImportCheckbox.checked = settings.autoImport;
 
     conversionModeSelect.addEventListener('change', () => {
-        extension_settings[extensionName].conversionMode = conversionModeSelect.value;
+        settings.conversionMode = conversionModeSelect.value;
         saveSettings();
     });
+
+    if (languageSelect) {
+        languageSelect.addEventListener('change', () => {
+            settings.language = languageSelect.value;
+            applyTranslations();
+            renderDictList();
+            saveSettings();
+        });
+    }
 
     // Custom Dictionary Elements
     const dictListContainer = document.getElementById('dict-list-container');
@@ -296,25 +376,48 @@ function initializeConverter() {
     const clearLogBtn = document.getElementById('clear-log-btn');
 
     // Load saved settings for tool checkboxes
-    if (extension_settings[extensionName].toolAutoMount !== undefined) {
-        toolAutoMountCheckbox.checked = extension_settings[extensionName].toolAutoMount;
-    }
+    toolAutoMountCheckbox.checked = settings.toolAutoMount;
 
     toolAutoMountCheckbox.addEventListener('change', () => {
-        extension_settings[extensionName].toolAutoMount = toolAutoMountCheckbox.checked;
+        settings.toolAutoMount = toolAutoMountCheckbox.checked;
         saveSettings();
     });
 
     // Load saved settings for import type radio
-    if (extension_settings[extensionName].importType) {
-        const radio = document.querySelector(`input[name="import-type"][value="${extension_settings[extensionName].importType}"]`);
-        if (radio) radio.checked = true;
+    const savedImportTypeRadio = document.querySelector(`input[name="import-type"][value="${settings.importType}"]`);
+    if (savedImportTypeRadio) savedImportTypeRadio.checked = true;
+
+    const savedJsonScopeRadio = document.querySelector(`input[name="json-conversion-scope"][value="${settings.jsonConversionScope}"]`);
+    if (savedJsonScopeRadio) savedJsonScopeRadio.checked = true;
+    if (jsonFieldsInput) jsonFieldsInput.value = settings.jsonSelectedFields;
+
+    function updateJsonFieldsVisibility() {
+        const scope = document.querySelector('input[name="json-conversion-scope"]:checked')?.value || 'all';
+        if (jsonFieldsBlock) jsonFieldsBlock.style.display = scope === 'selected' ? 'flex' : 'none';
+    }
+    updateJsonFieldsVisibility();
+
+    document.querySelectorAll('input[name="json-conversion-scope"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (radio.checked) {
+                settings.jsonConversionScope = radio.value;
+                updateJsonFieldsVisibility();
+                saveSettings();
+            }
+        });
+    });
+
+    if (jsonFieldsInput) {
+        jsonFieldsInput.addEventListener('change', () => {
+            settings.jsonSelectedFields = jsonFieldsInput.value;
+            saveSettings();
+        });
     }
 
     document.querySelectorAll('input[name="import-type"]').forEach(radio => {
         radio.addEventListener('change', () => {
             if (radio.checked) {
-                extension_settings[extensionName].importType = radio.value;
+                settings.importType = radio.value;
                 saveSettings();
             }
         });
@@ -342,15 +445,17 @@ function initializeConverter() {
     fileSelectButton.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length > 0) {
+            fileNameDisplay.dataset.empty = 'false';
             fileNameDisplay.textContent = Array.from(fileInput.files).map(f => f.name).join(', ');
         } else {
-            fileNameDisplay.textContent = '未選擇任何檔案';
+            fileNameDisplay.dataset.empty = 'true';
+            fileNameDisplay.textContent = t('noFiles');
         }
     });
 
     autoImportCheckbox.addEventListener('change', () => {
         importTypeBlock.style.display = autoImportCheckbox.checked ? 'block' : 'none';
-        extension_settings[extensionName].autoImport = autoImportCheckbox.checked;
+        settings.autoImport = autoImportCheckbox.checked;
         saveSettings();
     });
     // Initial state
@@ -359,8 +464,8 @@ function initializeConverter() {
     // --- Custom Dictionary Logic ---
     
     // Initialize settings if needed
-    if (!extension_settings[extensionName]) extension_settings[extensionName] = {};
-    if (!extension_settings[extensionName].custom_dictionaries) extension_settings[extensionName].custom_dictionaries = [];
+    settings.custom_dictionaries = normalizeDictionaries(settings.custom_dictionaries);
+    extension_settings[extensionName].custom_dictionaries = settings.custom_dictionaries;
     
     function saveDicts() {
         saveSettings();
@@ -380,10 +485,10 @@ function initializeConverter() {
     function renderDictList() {
         if (!dictListContainer) return;
         dictListContainer.innerHTML = '';
-        const dicts = extension_settings[extensionName].custom_dictionaries;
+        const dicts = getSettings().custom_dictionaries;
         
         if (dicts.length === 0) {
-            dictListContainer.innerHTML = '<div style="font-style: italic; color: gray; text-align: center;">暫無儲存的字典</div>';
+            dictListContainer.innerHTML = `<div style="font-style: italic; color: gray; text-align: center;">${getCurrentLanguage() === 'en' ? 'No saved dictionaries' : getCurrentLanguage() === 'zh-CN' ? '暂无保存的字典' : '暫無儲存的字典'}</div>`;
             return;
         }
 
@@ -407,7 +512,7 @@ function initializeConverter() {
             };
 
             const nameLabel = document.createElement('span');
-            nameLabel.textContent = `${dict.name} (${dict.content.length} 詞)`;
+            nameLabel.textContent = `${dict.name} (${dict.content.length} ${getCurrentLanguage() === 'en' ? 'entries' : getCurrentLanguage() === 'zh-CN' ? '词' : '詞'})`;
             nameLabel.style.flexGrow = '1';
             nameLabel.style.overflow = 'hidden';
             nameLabel.style.textOverflow = 'ellipsis';
@@ -591,7 +696,7 @@ function initializeConverter() {
 
     // Helper to add or update dictionary
     function addOrUpdateDictionary(newDict) {
-        const dicts = extension_settings[extensionName].custom_dictionaries;
+        const dicts = getSettings().custom_dictionaries;
         let existingIndex = -1;
         if (newDict.id) {
             existingIndex = dicts.findIndex(d => d.id === newDict.id);
@@ -656,7 +761,7 @@ function initializeConverter() {
     if (clearDictsBtn) {
         clearDictsBtn.addEventListener('click', () => {
             if (confirm('確定要清空所有已儲存的字典嗎?')) {
-                extension_settings[extensionName].custom_dictionaries = [];
+                getSettings().custom_dictionaries.length = 0;
                 saveDicts();
                 log('INFO: 已清空所有外掛字典');
             }
@@ -664,6 +769,7 @@ function initializeConverter() {
     }
 
     // Initial Render
+    applyTranslations();
     renderDictList();
 
     // --- Dictionary Tools Logic ---
@@ -742,6 +848,11 @@ function initializeConverter() {
                     continue;
                 }
 
+                if (!blob) {
+                    log(`跳過未產生輸出的檔案: ${file.name}`);
+                    continue;
+                }
+
                 const newFile = new File([blob], `converted-${file.name}`, { type: blob.type });
                 if (autoImportCheckbox.checked) {
                     convertedFiles.push(newFile);
@@ -768,17 +879,41 @@ function initializeConverter() {
     async function convertJsonToBlob(file, converter, log) {
         const text = await file.text();
         const data = JSON.parse(text);
-        const converted = convertJsonValue(data, converter);
+        const activeSettings = getSettings();
+        const converted = convertJsonValue(data, converter, {
+            scope: activeSettings.jsonConversionScope,
+            selectedFields: parseSelectedFields(activeSettings.jsonSelectedFields),
+        });
         const newJson = JSON.stringify(converted, null, 2);
         return new Blob([newJson], { type: 'application/json' });
     }
 
-    function convertJsonValue(value, converter) {
-        if (typeof value === 'string') return converter(value);
-        if (Array.isArray(value)) return value.map(v => convertJsonValue(v, converter));
+    function parseSelectedFields(fieldsText) {
+        return String(fieldsText || '')
+            .split(',')
+            .map(field => field.trim())
+            .filter(Boolean);
+    }
+
+    function shouldConvertJsonField(path, key, options = {}) {
+        if (!options || options.scope !== 'selected') return true;
+        const selected = Array.isArray(options.selectedFields) ? options.selectedFields : [];
+        if (selected.length === 0) return false;
+        return selected.some(field => field === key || field === path || path.endsWith(`.${field}`));
+    }
+
+    function convertJsonValue(value, converter, options = {}, path = '') {
+        if (typeof value === 'string') {
+            const key = path.split('.').pop() || path;
+            return shouldConvertJsonField(path, key, options) ? converter(value) : value;
+        }
+        if (Array.isArray(value)) return value.map((v, index) => convertJsonValue(v, converter, options, path ? `${path}.${index}` : String(index)));
         if (typeof value === 'object' && value !== null) {
             const out = {};
-            for (const k in value) out[k] = convertJsonValue(value[k], converter);
+            for (const k in value) {
+                const childPath = path ? `${path}.${k}` : k;
+                out[k] = convertJsonValue(value[k], converter, options, childPath);
+            }
             return out;
         }
         return value;
@@ -984,10 +1119,14 @@ function initializeConverter() {
             const chunkType = new TextDecoder().decode(typeBytes);
             const chunkStart = pos + 8;
             const chunkEnd = chunkStart + length;
-            if (chunkEnd > data.length) break; // malformed
-            const chunkData = data.slice(chunkStart, chunkEnd);
             const crcStart = chunkEnd;
             const crcEnd = crcStart + 4;
+            if (chunkEnd > data.length || crcEnd > data.length) {
+                log(`⚠️ ${file.name}: 偵測到不完整的 PNG 區塊，保留剩餘原始資料。`);
+                outputParts.push(data.slice(pos));
+                break;
+            }
+            const chunkData = data.slice(chunkStart, chunkEnd);
             // process tEXt / zTXt / iTXt
             let newChunkData = chunkData;
             try {
@@ -1056,24 +1195,29 @@ function initializeConverter() {
 
             if (!rawText || rawText.length === 0) return chunkData;
 
-            // Attempt Base64 decode -> JSON
+            // Attempt Base64 decode -> JSON, then raw JSON.
             let jsonObj = null;
+            let wasBase64 = false;
             try {
                 const decoded = b64DecodeUnicode(rawText);
                 jsonObj = JSON.parse(decoded);
+                wasBase64 = true;
                 log && log(`[DEBUG] Detected base64 JSON in chunk (keyword: ${keywordStr || '<empty>'})`);
             } catch (e) {
                 try { jsonObj = JSON.parse(rawText); log && log(`[DEBUG] Detected raw JSON in chunk (keyword: ${keywordStr || '<empty>'})`); } catch (e2) { return chunkData; }
             }
 
             // Convert recursively
-            const converted = convertJsonValue(jsonObj, converter);
+            const activeSettings = getSettings();
+            const converted = convertJsonValue(jsonObj, converter, {
+                scope: activeSettings.jsonConversionScope,
+                selectedFields: parseSelectedFields(activeSettings.jsonSelectedFields),
+            });
             const newJson = JSON.stringify(converted);
 
             // Re-encode in original-ish form
             if (chunkType === 'tEXt') {
-                const newB64 = b64EncodeUnicode(newJson);
-                const encoded = te.encode(newB64);
+                const encoded = te.encode(wasBase64 ? b64EncodeUnicode(newJson) : newJson);
                 return new Uint8Array([...keyword, 0, ...encoded]);
             }
 

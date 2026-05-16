@@ -1,7 +1,7 @@
 <!-- png-chinese-converter/settings.html -->
 <div class="inline-drawer CSTT">
     <div class="inline-drawer-toggle inline-drawer-header">
-        <b>CSTT 簡繁角色卡轉換</b>
+        <b data-i18n="title">CSTT 簡繁角色卡轉換</b>
         <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
     </div>
     <div class="inline-drawer-content cstt-container" style="display: none;">
@@ -9,21 +9,30 @@
         <!-- File Conversion Drawer -->
         <div class="inline-drawer">
             <div class="inline-drawer-toggle inline-drawer-header">
-                <b>檔案轉換 (File Conversion)</b>
+                <b data-i18n="fileConversion">檔案轉換 (File Conversion)</b>
                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
             </div>
             <div class="inline-drawer-content" style="display: none;">
+                <div class="cstt-block">
+                    <label for="cstt-language-select" data-i18n="language">介面語言:</label>
+                    <select id="cstt-language-select" class="text_pole">
+                        <option value="zh-TW">繁體中文</option>
+                        <option value="zh-CN">简体中文</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+
                 <div class="cstt-block file-input-block">
                     <div class="file-input-controls">
-                        <label>選擇檔案:</label>
+                        <label data-i18n="selectFiles">選擇檔案:</label>
                         <input type="file" id="file-input" class="text_pole" multiple accept=".png,.json" style="display: none;">
-                        <button id="file-select-button" class="menu_button">瀏覽...</button>
+                        <button id="file-select-button" class="menu_button" data-i18n="browse">瀏覽...</button>
                     </div>
-                    <span id="file-name-display" style="font-style: italic;">未選擇任何檔案</span>
+                    <span id="file-name-display" data-empty="true" style="font-style: italic;">未選擇任何檔案</span>
                 </div>
 
                 <div class="cstt-block">
-                    <label for="conversion-mode-select">轉換模式:</label>
+                    <label for="conversion-mode-select" data-i18n="conversionMode">轉換模式:</label>
                     <div class="cstt-block">
                     <select id="conversion-mode-select" class="text_pole">
                         <option value="s2t">簡體 -> 繁體 (標準)</option>
@@ -42,23 +51,33 @@
 
                 <div class="cstt-block">
                     <input type="checkbox" id="auto-import-checkbox" checked>
-                    <label for="auto-import-checkbox">自動匯入 (若失敗則改為下載)</label>
+                    <label for="auto-import-checkbox" data-i18n="autoImport">自動匯入 (若失敗則改為下載)</label>
                 </div>
 
                 <div class="cstt-block" id="import-type-block">
-                    <label>匯入類型:</label>
+                    <label data-i18n="importType">匯入類型:</label>
                     <input type="radio" id="import-type-char" name="import-type" value="character" checked>
-                    <label for="import-type-char">角色卡</label>
+                    <label for="import-type-char" data-i18n="character">角色卡</label>
                     <input type="radio" id="import-type-world" name="import-type" value="world">
-                    <label for="import-type-world">世界書</label>
+                    <label for="import-type-world" data-i18n="world">世界書</label>
                     <input type="radio" id="import-type-preset" name="import-type" value="preset">
-                    <label for="import-type-preset">預設</label>
+                    <label for="import-type-preset" data-i18n="preset">預設</label>
                     <input type="radio" id="import-type-regex" name="import-type" value="regex">
-                    <label for="import-type-regex">正規表達式</label>
+                    <label for="import-type-regex" data-i18n="regex">正規表達式</label>
+                </div>
+
+                <div class="cstt-block cstt-json-scope-block">
+                    <label data-i18n="jsonScope">JSON 字串轉換範圍:</label>
+                    <label><input type="radio" name="json-conversion-scope" value="all" checked> <span data-i18n="jsonAll">轉換所有字串欄位</span></label>
+                    <label><input type="radio" name="json-conversion-scope" value="selected"> <span data-i18n="jsonSelected">只轉換選定欄位</span></label>
+                </div>
+                <div class="cstt-block" id="json-fields-block" style="display: none;">
+                    <label for="json-fields-input" data-i18n="jsonFields">欄位名稱/路徑（逗號分隔）:</label>
+                    <input type="text" id="json-fields-input" class="text_pole" style="flex: 1;" placeholder="name,description,data.name">
                 </div>
 
                 <div>
-                    <button id="convert-button" class="menu_button">轉換</button>
+                    <button id="convert-button" class="menu_button" data-i18n="convert">轉換</button>
                 </div>
             </div>
         </div>
@@ -66,7 +85,7 @@
         <!-- Custom Dictionary Drawer -->
         <div class="inline-drawer">
             <div class="inline-drawer-toggle inline-drawer-header">
-                <b>外掛字典管理 (Custom Dictionary)</b>
+                <b data-i18n="customDictionary">外掛字典管理 (Custom Dictionary)</b>
                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
             </div>
             <div class="inline-drawer-content" style="display: none;">
@@ -76,9 +95,9 @@
                     </div>
                     <div class="file-input-controls">
                         <input type="file" id="add-dict-input" class="text_pole" multiple accept=".txt,.json" style="display: none;">
-                        <button id="create-dict-btn" class="menu_button">新建字典</button>
-                        <button id="add-dict-btn" class="menu_button">匯入字典...</button>
-                        <button id="clear-dicts-btn" class="menu_button">清空列表</button>
+                        <button id="create-dict-btn" class="menu_button" data-i18n="createDictionary">新建字典</button>
+                        <button id="add-dict-btn" class="menu_button" data-i18n="importDictionary">匯入字典...</button>
+                        <button id="clear-dicts-btn" class="menu_button" data-i18n="clearList">清空列表</button>
                     </div>
                 </div>
             </div>
@@ -87,19 +106,19 @@
         <!-- Dictionary Tools Drawer -->
         <div class="inline-drawer">
             <div class="inline-drawer-toggle inline-drawer-header">
-                <b>字典工具 (Dictionary Tools)</b>
+                <b data-i18n="dictionaryTools">字典工具 (Dictionary Tools)</b>
                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
             </div>
             <div class="inline-drawer-content" style="display: none;">
                 <div class="cstt-block">
-                    <label>字典轉換:</label>
+                    <label data-i18n="dictionaryConvert">字典轉換:</label>
                     <input type="file" id="tool-dict-input" class="text_pole" accept=".txt" style="display: none;">
-                    <button id="tool-dict-select-btn" class="menu_button">選擇 TXT 字典...</button>
-                    <button id="tool-convert-json-btn" class="menu_button">轉為 JSON</button>
+                    <button id="tool-dict-select-btn" class="menu_button" data-i18n="selectTxtDictionary">選擇 TXT 字典...</button>
+                    <button id="tool-convert-json-btn" class="menu_button" data-i18n="convertToJson">轉為 JSON</button>
                 </div>
                 <div class="cstt-block">
                     <input type="checkbox" id="tool-auto-mount-checkbox" checked>
-                    <label for="tool-auto-mount-checkbox">轉換後自動加入外掛字典列表</label>
+                    <label for="tool-auto-mount-checkbox" data-i18n="autoMountDictionary">轉換後自動加入外掛字典列表</label>
                 </div>
                 <span id="tool-dict-status" style="font-style: italic; font-size: 0.8em;"></span>
             </div>
@@ -108,17 +127,17 @@
         <!-- AI Response Conversion Drawer -->
         <div class="inline-drawer">
             <div class="inline-drawer-toggle inline-drawer-header">
-                <b>AI 回覆即時轉換</b>
+                <b data-i18n="aiConversion">AI 回覆即時轉換</b>
                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
             </div>
             <div class="inline-drawer-content" style="display: none;">
                 <div class="cstt-block">
                     <input type="checkbox" id="ai-convert-enable">
-                    <label for="ai-convert-enable">啟用 AI 回覆攔截轉換</label>
+                    <label for="ai-convert-enable" data-i18n="enableAiConversion">啟用 AI 回覆攔截轉換</label>
                 </div>
                 <div class="cstt-block">
                     <div class="cstt-block" id="ai-convert-mode-block" style="display: none;">
-                        <label for="ai-conversion-mode-select">轉換模式:</label>
+                        <label for="ai-conversion-mode-select" data-i18n="conversionMode">轉換模式:</label>
                         <select id="ai-conversion-mode-select" class="text_pole">
                             <option value="s2t">簡體 -> 繁體 (標準)</option>
                             <option value="t2s">繁體 -> 簡體 (標準)</option>
@@ -139,16 +158,16 @@
         <!-- Log Area (Keep visible for feedback) -->
         <div id="status-area">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <h4 style="margin: 0;">轉換日誌</h4>
-                <button id="clear-log-btn" class="menu_button" style="padding: 2px 8px; font-size: 0.8em;">清空日誌</button>
+                <h4 style="margin: 0;" data-i18n="logTitle">轉換日誌</h4>
+                <button id="clear-log-btn" class="menu_button" style="padding: 2px 8px; font-size: 0.8em;" data-i18n="clearLog">清空日誌</button>
             </div>
             <pre id="log-output"></pre>
         </div>
 
         <hr>
         <div>
-            <p>對於插件有問題可聯絡提問</p>
-            <p>原作者 (Original Author):</p>
+            <p data-i18n="contact">對於插件有問題可聯絡提問</p>
+            <p data-i18n="originalAuthor">原作者 (Original Author):</p>
             <ul>
                 <li>Discord: enclave_x0775</li>
                 <li>Telegram: @Enclave_X</li>
@@ -159,28 +178,28 @@
     <!-- Dictionary Editor Modal -->
     <div id="cstt-dict-editor-modal" class="cstt-modal" style="display: none;">
         <div class="cstt-modal-content">
-            <h3>編輯字典 (Edit Dictionary)</h3>
+            <h3 data-i18n="editDictionary">編輯字典 (Edit Dictionary)</h3>
             <p style="font-size: 0.85em; color: var(--text-color-secondary); margin-bottom: 10px;">
-                注意：自定義字典具有最高優先級。若設定單字規則（如 "面"->"面"）導致詞彙轉換錯誤（如 "冷面"->"冷麵" 變成 "冷面"），請將正確的詞彙規則（"冷面"->"冷麵"）也加入字典。系統會優先匹配較長的詞彙。
+                <span data-i18n="dictNotice">注意：自定義字典具有最高優先級。若設定單字規則導致詞彙轉換錯誤，請將正確的詞彙規則也加入字典。系統會優先匹配較長的詞彙。</span>
             </p>
             <div class="cstt-block">
-                <label>名稱:</label>
+                <label data-i18n="name">名稱:</label>
                 <input type="text" id="cstt-dict-name" class="text_pole" placeholder="My Dictionary">
             </div>
             <div style="margin: 10px 0; max-height: 400px; overflow-y: auto;">
                 <div class="cstt-dict-header-row" style="display: flex; gap: 5px; font-weight: bold; margin-bottom: 5px;">
-                    <span style="flex: 1;">原文 (Original)</span>
-                    <span style="flex: 1;">替換 (Replacement)</span>
+                    <span style="flex: 1;" data-i18n="original">原文 (Original)</span>
+                    <span style="flex: 1;" data-i18n="replacement">替換 (Replacement)</span>
                     <span style="width: 30px;"></span>
                 </div>
                 <div id="cstt-dict-entries">
                     <!-- Entries injected via JS -->
                 </div>
             </div>
-            <button id="cstt-add-entry-btn" class="menu_button"><i class="fa-solid fa-plus"></i> 新增詞條</button>
+            <button id="cstt-add-entry-btn" class="menu_button"><i class="fa-solid fa-plus"></i> <span data-i18n="addEntry">新增詞條</span></button>
             <div class="cstt-modal-footer">
-                <button id="cstt-save-dict-btn" class="menu_button">儲存</button>
-                <button id="cstt-cancel-dict-btn" class="menu_button">取消</button>
+                <button id="cstt-save-dict-btn" class="menu_button" data-i18n="save">儲存</button>
+                <button id="cstt-cancel-dict-btn" class="menu_button" data-i18n="cancel">取消</button>
             </div>
         </div>
     </div>

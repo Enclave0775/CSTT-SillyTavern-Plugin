@@ -22,6 +22,14 @@
 .CSTT .cstt-block {
     display: flex;
     align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.CSTT .cstt-json-scope-block {
+    align-items: flex-start;
+}
+.CSTT #json-fields-block input {
+    min-width: 220px;
 }
 .CSTT button {
     white-space: nowrap;
@@ -89,7 +97,7 @@
     align-items: center;
 }
 .cstt-modal-content {
-    background: #1a1a1a;
+    background: var(--SmartThemeBlurTintColor, #1a1a1a);
     padding: 20px;
     border-radius: 10px;
     width: 80%;
