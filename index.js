@@ -7,31 +7,27 @@
    - AI Response Interception and Conversion
 */
 
-import { eventSource, event_types, saveSettings } from '/script.js';
-import { extension_settings, getContext } from '/scripts/extensions.js';
+// Use relative imports so the plugin keeps working when SillyTavern is hosted under a URL subpath.
+import { eventSource, event_types, saveSettings } from '../../../../script.js';
+import { extension_settings, getContext } from '../../../extensions.js';
 
 const extensionName = "CSTT-SillyTavern-Plugin";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}/`;
 
-// Helper to get converter with custom dictionaries
-function getConverter(mode) {
-    if (typeof OpenCC === 'undefined') {
-        throw new Error('OpenCC library not loaded');
+// Cache for the expensive OpenCC ConverterFactory result, keyed by conversion mode.
+const openccConverterCache = new Map();
+
+function makeDictId() {
+    return crypto?.randomUUID?.() || `${Date.now()}_${Math.random()}`;
+}
+
+function getOpenccConverter(mode) {
+    if (openccConverterCache.has(mode)) {
+        return openccConverterCache.get(mode);
     }
-    
+
     const options = MODE_MAP[mode] || MODE_MAP['s2twp'];
     const dictGroups = [];
-
-    // Custom dictionaries are handled via placeholder protection mechanism
-    const settings = getSettings();
-    let customEntries = settings.custom_dictionaries
-        .filter(d => d.enabled)
-        .map(d => d.content)
-        .flat()
-        .filter(entry => Array.isArray(entry) && typeof entry[0] === 'string' && entry[0].length > 0);
-
-    // Sort by length descending to handle overlapping matches (longest match first)
-    customEntries.sort((a, b) => b[0].length - a[0].length);
 
     // Add standard dictionaries based on mode
     ['from', 'to'].forEach(type => {
@@ -43,7 +39,29 @@ function getConverter(mode) {
         }
     });
 
-    const openccConverter = OpenCC.ConverterFactory.apply(null, dictGroups);
+    const converter = OpenCC.ConverterFactory.apply(null, dictGroups);
+    openccConverterCache.set(mode, converter);
+    return converter;
+}
+
+// Helper to get converter with custom dictionaries
+function getConverter(mode) {
+    if (typeof OpenCC === 'undefined') {
+        throw new Error('OpenCC library not loaded');
+    }
+    
+    // Custom dictionaries are handled via placeholder protection mechanism
+    const settings = getSettings();
+    let customEntries = settings.custom_dictionaries
+        .filter(d => d.enabled)
+        .map(d => d.content)
+        .flat()
+        .filter(entry => Array.isArray(entry) && typeof entry[0] === 'string' && entry[0].length > 0);
+
+    // Sort by length descending to handle overlapping matches (longest match first)
+    customEntries.sort((a, b) => b[0].length - a[0].length);
+
+    const openccConverter = getOpenccConverter(mode);
 
     return function(text) {
         if (!text) return text;
@@ -134,7 +152,7 @@ function normalizeDictionaries(input) {
     return input.map((dict) => {
         const content = Array.isArray(dict?.content) ? dict.content : [];
         return {
-            id: dict?.id || Date.now() + Math.random(),
+            id: dict?.id || makeDictId(),
             name: String(dict?.name || 'Dictionary'),
             enabled: dict?.enabled !== false,
             content: content
